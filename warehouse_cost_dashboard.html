@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>新仓租成本看板（FY27）</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'PingFang SC','Microsoft YaHei',sans-serif; background:#f0f2f5; }
+
+.header {
+  background:linear-gradient(135deg,#1565c0,#1976d2);
+  color:white; text-align:center; padding:12px 24px;
+  font-size:20px; font-weight:700; letter-spacing:2px;
+}
+.header .sub { font-size:12px; opacity:.8; margin-top:2px; font-weight:400; }
+
+.rule-bar {
+  background:#e3f2fd; border-bottom:2px solid #90caf9;
+  padding:8px 24px; display:flex; gap:28px; align-items:center;
+  font-size:12px; color:#1565c0; font-weight:500; flex-wrap:wrap;
+}
+.rule-item { display:flex; align-items:center; gap:5px; }
+.dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+/* ── 产品线筛选Tab ── */
+.filter-bar {
+  background:#fff; border-bottom:1px solid #e0e0e0;
+  padding:0 24px; display:flex; align-items:center; gap:4px;
+  overflow-x:auto; white-space:nowrap;
+}
+.filter-bar .fl { font-size:12px; color:#888; margin-right:8px; flex-shrink:0; }
+.ftab {
+  display:inline-block; padding:8px 14px; font-size:12px; cursor:pointer;
+  color:#555; border-bottom:3px solid transparent; transition:all .2s;
+  flex-shrink:0; user-select:none;
+}
+.ftab:hover { color:#1976d2; }
+.ftab.active { color:#1976d2; border-bottom-color:#1976d2; font-weight:600; }
+
+/* ── KPI通用 ── */
+.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:14px 24px 0; }
+.kpi { background:white; border-radius:10px; padding:14px 16px; box-shadow:0 1px 6px rgba(0,0,0,.08); border-left:4px solid; }
+.kpi.b { border-left-color:#1976d2; }
+.kpi.g { border-left-color:#43a047; }
+.kpi.o { border-left-color:#f57c00; }
+.kpi.r { border-left-color:#c62828; }
+.kpi-t { font-size:12px; color:#888; margin-bottom:5px; }
+.kpi-v { font-size:26px; font-weight:700; color:#1a1a2e; line-height:1.1; }
+.kpi-v .u { font-size:13px; font-weight:400; color:#aaa; margin-left:2px; }
+.kpi-n { font-size:11px; color:#aaa; margin-top:5px; }
+.kpi-n b { color:#f57c00; }
+.kpi-n s { color:#c62828; }
+
+.row { display:grid; gap:12px; padding:12px 24px 0; }
+.row.r2 { grid-template-columns:1.4fr 1fr; }
+.row.r2e { grid-template-columns:1fr 1fr; }
+.row.r3 { grid-template-columns:1fr 1fr 1fr; }
+.row.r1 { padding-bottom:0; }
+
+.card { background:white; border-radius:10px; padding:14px 16px; box-shadow:0 1px 6px rgba(0,0,0,.08); }
+.ct { font-size:13px; font-weight:600; color:#333; margin-bottom:10px;
+       display:flex; align-items:center; justify-content:space-between; }
+.ct .l { display:flex; align-items:center; gap:6px; }
+.ct .l::before { content:''; display:inline-block; width:3px; height:14px;
+                  background:#1976d2; border-radius:2px; }
+.badge { font-size:11px; padding:2px 8px; border-radius:10px; }
+.bw { background:#fff3e0; color:#e65100; }
+.bg { background:#e8f5e9; color:#2e7d32; }
+.bi { background:#e3f2fd; color:#1565c0; }
+.br { background:#fce4e4; color:#c62828; }
+
+/* ── 单产品线专属视图 ── */
+#view-single { display:none; padding-bottom:20px; }
+#view-all   { padding-bottom:20px; }
+
+/* 顶部banner */
+.single-banner {
+  margin:14px 24px 0;
+  background:linear-gradient(135deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%);
+  border-radius:12px; padding:16px 24px; color:white;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+}
+.single-banner .bname { font-size:22px; font-weight:700; letter-spacing:1px; }
+.single-banner .bsub  { font-size:12px; opacity:.8; margin-top:4px; }
+.single-banner .bkpi  { display:flex; gap:28px; }
+.single-banner .bk    { text-align:center; }
+.single-banner .bk-v  { font-size:20px; font-weight:700; }
+.single-banner .bk-t  { font-size:11px; opacity:.75; margin-top:2px; }
+
+/* ── 费用明细表 ── */
+.cost-table { width:100%; border-collapse:collapse; font-size:12px; }
+.cost-table th {
+  background:#f5f7fa; color:#555; font-weight:600;
+  padding:7px 10px; text-align:left; border-bottom:2px solid #e0e0e0;
+}
+.cost-table td { padding:6px 10px; border-bottom:1px solid #f0f0f0; color:#333; }
+.cost-table tr:last-child td { border-bottom:none; font-weight:600; background:#fafafa; }
+.cost-table .num { text-align:right; font-variant-numeric:tabular-nums; }
+.red { color:#c62828; }
+.ora { color:#f57c00; }
+
+/* ── TOP5 排名列表 ── */
+.rank-list { list-style:none; }
+.rank-item {
+  display:flex; align-items:center; gap:8px;
+  padding:7px 0; border-bottom:1px solid #f5f5f5; font-size:12px;
+}
+.rank-item:last-child { border-bottom:none; }
+.rank-no {
+  width:22px; height:22px; border-radius:50%; display:flex;
+  align-items:center; justify-content:center; font-size:11px; font-weight:700;
+  flex-shrink:0;
+}
+.rank-no.n1 { background:#FFD700; color:#7a5a00; }
+.rank-no.n2 { background:#C0C0C0; color:#444; }
+.rank-no.n3 { background:#CD7F32; color:#fff; }
+.rank-no.nx { background:#e8eaf6; color:#555; }
+.rank-bar-wrap { flex:1; }
+.rank-name { font-size:11px; color:#333; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.rank-bar-bg { background:#f0f0f0; border-radius:3px; height:6px; }
+.rank-bar-fill { height:6px; border-radius:3px; transition:width .4s; }
+.rank-val { font-size:12px; font-weight:600; white-space:nowrap; flex-shrink:0; }
+
+/* ── 即将超龄告警表 ── */
+.near-table { width:100%; border-collapse:collapse; font-size:12px; }
+.near-table th {
+  background:#f5f7fa; color:#555; font-weight:600;
+  padding:7px 10px; text-align:left; border-bottom:2px solid #e0e0e0;
+}
+.near-table td { padding:6px 10px; border-bottom:1px solid #f0f0f0; color:#333; }
+.near-table tr:last-child td { border-bottom:none; }
+.near-table .num { text-align:right; }
+.days-tag {
+  display:inline-block; font-size:10px; padding:2px 7px; border-radius:8px; font-weight:600;
+}
+.days-30  { background:#fce4e4; color:#c62828; }
+.days-60  { background:#fff3e0; color:#e65100; }
+.days-90  { background:#fff8e1; color:#f9a825; }
+.no-data  { text-align:center; color:#bbb; font-size:12px; padding:18px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  新仓租成本看板（FY27）
+  <div class="sub">统计日期：2026-02-18 至 2026-03-19　|　数据更新：2026-03-19</div>
+</div>
+
+<div class="rule-bar">
+  <b style="color:#0d47a1">计费规则：</b>
+  <div class="rule-item"><div class="dot" style="background:#66bb6a"></div>0–30天：<b>免租</b></div>
+  <div class="rule-item"><div class="dot" style="background:#42a5f5"></div>31–365天：<b>按新仓租标准计费</b></div>
+  <div class="rule-item"><div class="dot" style="background:#ef5350"></div>&gt;365天：<b>新仓租 × 120%（加收20%）</b></div>
+  <span style="margin-left:auto;color:#888;font-weight:400" id="rule-scope">仓库：全部　|　货主：培优 + 19家</span>
+</div>
+
+<!-- 产品线筛选Tab -->
+<div class="filter-bar">
+  <span class="fl">产品线：</span>
+  <span class="ftab active" data-idx="-1">全部</span>
+</div>
+
+<!-- ══════════ 全部视图 ══════════ -->
+<div id="view-all">
+  <div class="kpi-row">
+    <div class="kpi b">
+      <div class="kpi-t">新仓租总成本（本期）</div>
+      <div class="kpi-v">286.4<span class="u">万元</span></div>
+      <div class="kpi-n">免租段节省约 <b>38.2万元</b>（0–30天）</div>
+    </div>
+    <div class="kpi g">
+      <div class="kpi-t">31–365天应付仓租</div>
+      <div class="kpi-v">261.5<span class="u">万元</span></div>
+      <div class="kpi-n">覆盖在库件数 <b>703万件</b></div>
+    </div>
+    <div class="kpi o">
+      <div class="kpi-t">&gt;365天 加收仓租（含20%）</div>
+      <div class="kpi-v">24.9<span class="u">万元</span></div>
+      <div class="kpi-n">基础租 <b>20.8万</b>，加收部分 <s>4.1万</s></div>
+    </div>
+    <div class="kpi r">
+      <div class="kpi-t">&gt;365天 在库件数</div>
+      <div class="kpi-v">557.1<span class="u">万件</span></div>
+      <div class="kpi-n">占总在库 <b>42.3%</b>，高滞销风险</div>
+    </div>
+  </div>
+  <div class="row r1" style="padding-bottom:0">
+    <div class="card">
+      <div class="ct"><div class="l">各货主仓租费用构成（按计费段）</div><span class="badge bw">红色=超龄加收费</span></div>
+      <div id="g1" style="height:300px"></div>
+    </div>
+  </div>
+  <div class="row r2">
+    <div class="card">
+      <div class="ct"><div class="l">&gt;365天 滞销货品仓租明细 TOP15</div><span class="badge bw">需推动清库</span></div>
+      <div id="g3" style="height:260px"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="l">免租期节省额（各货主）</div><span class="badge bg">0–30天不计费</span></div>
+      <div id="g5" style="height:260px"></div>
+    </div>
+  </div>
+  <div class="row r1">
+    <div class="card">
+      <div class="ct"><div class="l">各货主库龄结构（6段细分，万件）</div><span class="badge bw">橙/红段 = 高仓租风险</span></div>
+      <div id="g6" style="height:250px"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════ 单产品线视图 ══════════ -->
+<div id="view-single">
+
+  <!-- 顶部Banner -->
+  <div class="single-banner">
+    <div>
+      <div class="bname" id="s-name">—</div>
+      <div class="bsub">本期仓租成本摘要　|　统计周期：2026-02-18 至 2026-03-19</div>
+    </div>
+    <div class="bkpi">
+      <div class="bk"><div class="bk-v" id="s-total">—</div><div class="bk-t">本期总成本（元）</div></div>
+      <div class="bk"><div class="bk-v" id="s-save">—</div><div class="bk-t">免租节省（元）</div></div>
+      <div class="bk"><div class="bk-v" id="s-sur">—</div><div class="bk-t">超龄加收（元）</div></div>
+      <div class="bk"><div class="bk-v" id="s-risk">—</div><div class="bk-t">&gt;365天占比</div></div>
+    </div>
+  </div>
+
+  <!-- 库龄饼图 + 费用明细表 -->
+  <div class="row r2" style="padding-top:12px">
+    <div class="card">
+      <div class="ct"><div class="l">库龄结构分布</div><span class="badge bi" id="s-pie-note">—</span></div>
+      <div id="s-pie" style="height:260px"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="l">仓租费用明细</div></div>
+      <table class="cost-table" id="s-cost-tbl">
+        <thead>
+          <tr>
+            <th>计费段</th><th class="num">在库件数</th>
+            <th class="num">仓租（元）</th><th class="num">占比</th><th>说明</th>
+          </tr>
+        </thead>
+        <tbody id="s-cost-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TOP5超365天 + TOP5免租最多 -->
+  <div class="row r2e" style="padding-top:12px">
+    <div class="card">
+      <div class="ct">
+        <div class="l">超365天库龄 TOP5</div>
+        <span class="badge br">按加收金额排序</span>
+      </div>
+      <ul class="rank-list" id="s-rank-old"></ul>
+    </div>
+    <div class="card">
+      <div class="ct">
+        <div class="l">免租节省最多 TOP5</div>
+        <span class="badge bg">0–30天在库货品</span>
+      </div>
+      <ul class="rank-list" id="s-rank-free"></ul>
+    </div>
+  </div>
+
+  <!-- TOP10 即将超365天 -->
+  <div class="row r1" style="padding-top:12px; padding-bottom:20px">
+    <div class="card">
+      <div class="ct">
+        <div class="l">3个月内即将超365天库龄 TOP10</div>
+        <span class="badge bw" id="s-near-count">—</span>
+      </div>
+      <table class="near-table">
+        <thead>
+          <tr>
+            <th style="width:30px">#</th>
+            <th>货品名称</th>
+            <th class="num">当前库龄（天）</th>
+            <th class="num">在库件数</th>
+            <th class="num">当前仓租/月（元）</th>
+            <th class="num">超龄后月增费（元）</th>
+            <th style="text-align:center">距超龄</th>
+          </tr>
+        </thead>
+        <tbody id="s-near-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /view-single -->
+
+
+<script>
+window.addEventListener('load', function() {
+
+// ─────────────────────────────────────────────────────────
+// 基础数据
+// ─────────────────────────────────────────────────────────
+var brands = ['培优','直播增长','学而思国内','学而思国际','微视','看风','未来学校','阿嘿商城','美校积分','学而思出版','学而思硬件'];
+
+var costStd  = [48.2,32.1,41.5,28.6,35.8,22.4,18.9,15.3,12.7, 4.2, 2.1];
+var costBase = [ 1.8, 0.6, 2.4, 0.9, 0.7, 0.4, 0.3, 0.2, 0.1,10.2, 4.1];
+var costSur  = [0.36,0.12,0.48,0.18,0.14,0.08,0.06,0.04,0.02,2.04,0.82];
+var fsSave   = [8.2,5.6,7.1,4.9,6.1,3.8,3.2,2.6,2.2,0.7,0.4];
+
+var ageData = [
+  [18,22,16,24,38,52],
+  [12,15,10,16,25,28],
+  [15,18,13,20,32,44],
+  [10,12, 8,14,22,31],
+  [14,17,12,18,28,35],
+  [ 8,10, 7,11,17,22],
+  [ 7, 8, 6, 9,14,18],
+  [ 6, 7, 5, 7,11,14],
+  [ 5, 6, 4, 6, 9,11],
+  [ 1,1.5, 1, 2, 3,62],
+  [0.5,0.8,0.5,1,1.5,38]
+];
+
+// 超365天滞销货品（带基础租+加收）
+var odItems = [
+  {name:'学而思·五年级数学思维训练（第3版）',  owner:'学而思出版', qty:38420, base:8124, sur:1625},
+  {name:'学而思·初中英语语法全解（修订版）',   owner:'学而思出版', qty:31580, base:6682, sur:1336},
+  {name:'学而思·小学奥数举一反三A版',         owner:'学而思出版', qty:28760, base:6082, sur:1216},
+  {name:'学而思·高中数学联考专题训练',         owner:'学而思出版', qty:25300, base:5353, sur:1071},
+  {name:'学而思·三年级语文阅读理解专项突破',   owner:'学而思出版', qty:22140, base:4683, sur: 937},
+  {name:'学而思·幼小衔接全科训练营礼盒',       owner:'学而思国内', qty: 7600, base:1608, sur: 322},
+  {name:'学而思AI智能台灯L1 Pro',             owner:'学而思硬件', qty:18900, base:5292, sur:1058},
+  {name:'学而思智能错题打印机 M2',             owner:'学而思硬件', qty:15200, base:4256, sur: 851},
+  {name:'学而思·学习机X10（64G版）',          owner:'学而思硬件', qty:12400, base:3472, sur: 694},
+  {name:'学而思·口算天天练（一年级上）',       owner:'学而思国内', qty:19600, base:4149, sur: 830},
+  {name:'学而思·小学科学实验套装',             owner:'学而思国内', qty:16800, base:3554, sur: 711},
+  {name:'学而思·英语分级阅读绘本礼盒',         owner:'学而思国际', qty:14200, base:3004, sur: 601},
+  {name:'学而思·国际数学思维启蒙（K2）',       owner:'学而思国际', qty:11500, base:2432, sur: 486},
+  {name:'培优·小学数学竞赛冲刺100题',          owner:'培优',      qty:10800, base:2286, sur: 457},
+  {name:'培优·初中物理实验操作指导',            owner:'培优',      qty: 8900, base:1882, sur: 376},
+  {name:'培优·高中化学实验全程指导',            owner:'培优',      qty: 6200, base:1312, sur: 262},
+  {name:'微视·短视频运营实战手册',              owner:'微视',      qty:12600, base:2666, sur: 533},
+  {name:'微视·直播带货全套教程（盒装）',        owner:'微视',      qty: 9800, base:2074, sur: 415},
+  {name:'看风·青少年户外徒步套装A',             owner:'看风',      qty: 7400, base:1566, sur: 313},
+  {name:'未来学校·STEM探索礼盒（中阶）',        owner:'未来学校',  qty: 5600, base:1185, sur: 237},
+];
+
+// 免租TOP货品（0-30天，节省最多）
+var freeTopData = {
+  '学而思出版': [
+    {name:'学而思·2026全国中考押题密卷',   qty:52000, save:3640},
+    {name:'学而思·小学数学核心题库（上）',  qty:38500, save:2695},
+    {name:'学而思·英语完形填空600题',       qty:29800, save:2086},
+    {name:'学而思·初中物理实验全攻略',      qty:24600, save:1722},
+    {name:'学而思·高中文言文精析200篇',     qty:19200, save:1344},
+  ],
+  '学而思硬件': [
+    {name:'学而思·智能护眼台灯S3',         qty:21000, save:5880},
+    {name:'学而思·AI学习机Lite 2026款',    qty:14500, save:4060},
+    {name:'学而思·点读笔超值版',            qty:18200, save:3094},
+    {name:'学而思·电子词典笔Pro',           qty:11300, save:2260},
+    {name:'学而思·智能作业灯X2',            qty: 8600, save:1548},
+  ],
+  '培优': [
+    {name:'培优·全国奥数联赛模拟题集',      qty:16800, save:1176},
+    {name:'培优·初中数学竞赛冲刺包',        qty:13500, save: 945},
+    {name:'培优·科学思维启蒙套装（低年级）',qty:10200, save: 714},
+    {name:'培优·英语分级阅读B级礼盒',       qty: 8400, save: 588},
+    {name:'培优·寒假作业合订本2026',        qty: 6900, save: 483},
+  ],
+  '学而思国内': [
+    {name:'学而思·春季招生配套资料包',      qty:43000, save:3010},
+    {name:'学而思·小学全科能力提升套装',    qty:31000, save:2170},
+    {name:'学而思·初中语文阅读理解专项',    qty:22500, save:1575},
+    {name:'学而思·三年级数学思维导图册',    qty:17800, save:1246},
+    {name:'学而思·英语绘本分级阅读（入门）',qty:14200, save: 994},
+  ],
+  '学而思国际': [
+    {name:'学而思·AMC8模拟题集2026',        qty:18600, save:1302},
+    {name:'学而思·国际中文教材（K3）',      qty:14300, save:1001},
+    {name:'学而思·双语科学探索礼盒',        qty:11200, save: 784},
+    {name:'学而思·国际数学竞赛真题汇编',    qty: 8900, save: 623},
+    {name:'学而思·全球视野阅读系列Vol.3',   qty: 6800, save: 476},
+  ],
+  '直播增长': [
+    {name:'直播增长·运营实战课程配套资料',  qty:22000, save:1540},
+    {name:'直播增长·带货话术速成手册',      qty:16500, save:1155},
+    {name:'直播增长·流量密码教程（2026）',  qty:12800, save: 896},
+    {name:'直播增长·主播形象管理礼盒',      qty: 9600, save: 672},
+    {name:'直播增长·商品选品分析工具包',    qty: 7200, save: 504},
+  ],
+  '微视': [
+    {name:'微视·短视频剪辑课配套素材包',    qty:19400, save:1358},
+    {name:'微视·创作者成长计划礼盒',        qty:14800, save:1036},
+    {name:'微视·镜头语言训练教程',          qty:11300, save: 791},
+    {name:'微视·流量运营实战手册（新版）',  qty: 8700, save: 609},
+    {name:'微视·MCN孵化配套工具包',         qty: 6400, save: 448},
+  ],
+  '看风': [
+    {name:'看风·春季露营装备礼盒',          qty:12600, save: 882},
+    {name:'看风·青少年爬山入门套装',        qty: 9800, save: 686},
+    {name:'看风·户外摄影技巧手册',          qty: 7400, save: 518},
+    {name:'看风·轻量化装备选购指南',        qty: 5800, save: 406},
+    {name:'看风·四季穿搭攻略礼盒',          qty: 4600, save: 322},
+  ],
+  '未来学校': [
+    {name:'未来学校·编程启蒙套装（入门）',  qty:11200, save: 784},
+    {name:'未来学校·机器人搭建课程包',      qty: 8600, save: 602},
+    {name:'未来学校·AI探索礼盒2026',        qty: 6800, save: 476},
+    {name:'未来学校·数字艺术创作套装',      qty: 5200, save: 364},
+    {name:'未来学校·编程竞赛冲刺教材',      qty: 4100, save: 287},
+  ],
+  '阿嘿商城': [
+    {name:'阿嘿·春季新品美妆礼盒A',         qty: 9600, save: 672},
+    {name:'阿嘿·学生文具精选套装',          qty: 7400, save: 518},
+    {name:'阿嘿·健康零食月度订阅盒',        qty: 5800, save: 406},
+    {name:'阿嘿·亲子互动游戏套装',          qty: 4600, save: 322},
+    {name:'阿嘿·创意手工DIY大礼盒',         qty: 3800, save: 266},
+  ],
+  '美校积分': [
+    {name:'美校·积分兑换精选礼盒',          qty: 8400, save: 588},
+    {name:'美校·积分周边文创套装',          qty: 6600, save: 462},
+    {name:'美校·会员专属优惠大礼包',        qty: 5200, save: 364},
+    {name:'美校·艺术类课程学习套装',        qty: 4100, save: 287},
+    {name:'美校·积分兑换考试备考包',        qty: 3300, save: 231},
+  ],
+};
+
+// 3个月内即将超365天货品（当前库龄305-364天）
+var nearExpiryData = {
+  '学而思出版': [
+    {name:'学而思·2025秋季期末押题密卷',    qty:42600, age:358, rentPerMonth:6384, addPerMonth:1277},
+    {name:'学而思·高中生物实验全解析',       qty:34200, age:351, rentPerMonth:5130, addPerMonth:1026},
+    {name:'学而思·初中历史时间轴精讲',       qty:27800, age:344, rentPerMonth:4170, addPerMonth: 834},
+    {name:'学而思·小学英语绘本阅读（中级）', qty:23400, age:338, rentPerMonth:3510, addPerMonth: 702},
+    {name:'学而思·数学真题超详解2025版',     qty:19600, age:330, rentPerMonth:2940, addPerMonth: 588},
+    {name:'学而思·初中地理图册精讲',         qty:16200, age:322, rentPerMonth:2430, addPerMonth: 486},
+    {name:'学而思·小学科学实验手册B版',      qty:13800, age:315, rentPerMonth:2070, addPerMonth: 414},
+    {name:'学而思·高中化学有机物专题',       qty:11400, age:308, rentPerMonth:1710, addPerMonth: 342},
+    {name:'学而思·初中英语听力特训',         qty: 9200, age:307, rentPerMonth:1380, addPerMonth: 276},
+    {name:'学而思·小学语文写作素材库',       qty: 7600, age:305, rentPerMonth:1140, addPerMonth: 228},
+  ],
+  '学而思硬件': [
+    {name:'学而思·智能绘画板P2 2025款',     qty:16800, age:355, rentPerMonth:4704, addPerMonth: 941},
+    {name:'学而思·电子钢琴教学版',           qty:12400, age:347, rentPerMonth:3472, addPerMonth: 694},
+    {name:'学而思·VR探索眼镜 Lite',          qty: 9800, age:339, rentPerMonth:2744, addPerMonth: 549},
+    {name:'学而思·智能阅读台灯X1',           qty: 8200, age:331, rentPerMonth:2296, addPerMonth: 459},
+    {name:'学而思·蓝牙单词卡背机',           qty: 6600, age:323, rentPerMonth:1848, addPerMonth: 370},
+    {name:'学而思·编程机器人套件B',          qty: 5400, age:316, rentPerMonth:1512, addPerMonth: 302},
+    {name:'学而思·智能错题整理仪 V2',        qty: 4200, age:309, rentPerMonth:1176, addPerMonth: 235},
+  ],
+  '培优': [
+    {name:'培优·小学数学思维闯关套装',       qty:18400, age:352, rentPerMonth:1288, addPerMonth: 258},
+    {name:'培优·初中综合素质评测题库',       qty:14200, age:344, rentPerMonth: 994, addPerMonth: 199},
+    {name:'培优·高中物理经典例题精解',       qty:11600, age:336, rentPerMonth: 812, addPerMonth: 162},
+    {name:'培优·英语作文精批批改套装',       qty: 8900, age:328, rentPerMonth: 623, addPerMonth: 125},
+    {name:'培优·全国卷数学满分冲刺包',       qty: 7200, age:319, rentPerMonth: 504, addPerMonth: 101},
+  ],
+  '学而思国内': [
+    {name:'学而思·2025下半年招生物料包',     qty:38200, age:356, rentPerMonth:2674, addPerMonth: 535},
+    {name:'学而思·小学全科评测题库2025版',   qty:29600, age:347, rentPerMonth:2072, addPerMonth: 414},
+    {name:'学而思·初中数学培优专项训练',     qty:22400, age:339, rentPerMonth:1568, addPerMonth: 314},
+    {name:'学而思·语文阅读理解精选100篇',    qty:17800, age:331, rentPerMonth:1246, addPerMonth: 249},
+    {name:'学而思·英语听力突破30天（初中）', qty:14200, age:322, rentPerMonth: 994, addPerMonth: 199},
+    {name:'学而思·小学科学动手实验包C',      qty:11600, age:313, rentPerMonth: 812, addPerMonth: 162},
+  ],
+  '学而思国际': [
+    {name:'学而思·AMC10历年真题精解2025',    qty:16400, age:350, rentPerMonth:1148, addPerMonth: 230},
+    {name:'学而思·国际课程衔接教材（G7）',   qty:12800, age:341, rentPerMonth: 896, addPerMonth: 179},
+    {name:'学而思·双语数学思维礼盒（高阶）', qty: 9600, age:332, rentPerMonth: 672, addPerMonth: 134},
+    {name:'学而思·托福词汇速记卡套装',       qty: 7400, age:324, rentPerMonth: 518, addPerMonth: 104},
+    {name:'学而思·国际赛事备赛礼盒',         qty: 5800, age:316, rentPerMonth: 406, addPerMonth:  81},
+  ],
+  '直播增长': [
+    {name:'直播增长·2025年度运营报告合订本', qty:14600, age:349, rentPerMonth:1022, addPerMonth: 204},
+    {name:'直播增长·直播间搭建工具包2025',   qty:11200, age:338, rentPerMonth: 784, addPerMonth: 157},
+    {name:'直播增长·带货主播培训教材V3',     qty: 8800, age:328, rentPerMonth: 616, addPerMonth: 123},
+    {name:'直播增长·选品数据分析报告（年度）',qty: 6600, age:318, rentPerMonth: 462, addPerMonth:  92},
+  ],
+  '微视': [
+    {name:'微视·2025年度创作者大赛纪念册',   qty:12400, age:347, rentPerMonth: 868, addPerMonth: 174},
+    {name:'微视·Vlog拍摄进阶套装',           qty: 9600, age:339, rentPerMonth: 672, addPerMonth: 134},
+    {name:'微视·短视频剧本创作手册',          qty: 7200, age:330, rentPerMonth: 504, addPerMonth: 101},
+  ],
+  '看风': [
+    {name:'看风·2025冬季装备限定礼盒',       qty: 9800, age:353, rentPerMonth: 686, addPerMonth: 137},
+    {name:'看风·户外训练营配套装备包',        qty: 7600, age:341, rentPerMonth: 532, addPerMonth: 106},
+    {name:'看风·徒步路线图册（华北版）',      qty: 5400, age:329, rentPerMonth: 378, addPerMonth:  76},
+  ],
+  '未来学校': [
+    {name:'未来学校·2025编程大赛纪念版礼盒', qty: 7800, age:346, rentPerMonth: 546, addPerMonth: 109},
+    {name:'未来学校·青少年AI入门实验套装',   qty: 6200, age:337, rentPerMonth: 434, addPerMonth:  87},
+    {name:'未来学校·机器人竞赛备赛包',       qty: 4800, age:325, rentPerMonth: 336, addPerMonth:  67},
+  ],
+  '阿嘿商城': [
+    {name:'阿嘿·2025周年庆限定礼盒',         qty: 6600, age:351, rentPerMonth: 462, addPerMonth:  92},
+    {name:'阿嘿·会员专享秋季大礼包',         qty: 5200, age:340, rentPerMonth: 364, addPerMonth:  73},
+    {name:'阿嘿·节庆主题文创套装',           qty: 3900, age:328, rentPerMonth: 273, addPerMonth:  55},
+  ],
+  '美校积分': [
+    {name:'美校·2025年度积分清算礼盒',        qty: 5800, age:349, rentPerMonth: 406, addPerMonth:  81},
+    {name:'美校·会员专属纪念版周边套装',      qty: 4400, age:338, rentPerMonth: 308, addPerMonth:  62},
+  ],
+};
+
+// ─────────────────────────────────────────────────────────
+// 动态生成Tab
+// ─────────────────────────────────────────────────────────
+var filterBar = document.querySelector('.filter-bar');
+brands.forEach(function(b, i) {
+  var tab = document.createElement('span');
+  tab.className = 'ftab';
+  tab.dataset.idx = i;
+  tab.textContent = b;
+  filterBar.appendChild(tab);
+});
+
+// ─────────────────────────────────────────────────────────
+// 全部视图图表
+// ─────────────────────────────────────────────────────────
+var ageNames  = ['0-30天','31-60天','61-90天','91-180天','181-365天','>365天'];
+var ageColors = ['#66bb6a','#42a5f5','#29b6f6','#ffa726','#ff7043','#c62828'];
+
+var g1 = echarts.init(document.getElementById('g1'));
+g1.setOption({
+  tooltip:{ trigger:'axis', axisPointer:{type:'shadow'},
+    formatter:function(p){
+      var s='<b>'+p[0].name+'</b><br/>';
+      p.forEach(function(i){ s+=i.marker+i.seriesName+': '+i.value+'万元<br/>'; });
+      var t=p.reduce(function(a,b){return a+b.value;},0);
+      s+='<hr style="margin:3px 0"/>合计: '+t.toFixed(2)+'万元';
+      return s;
+    }
+  },
+  legend:{ data:['31-365天标准租','>365天基础租','>365天加收(+20%)'], top:0, right:0, itemWidth:10, textStyle:{fontSize:10} },
+  grid:{ left:55, right:10, top:28, bottom:50 },
+  xAxis:{ type:'category', data:brands, axisLabel:{fontSize:10, rotate:18, interval:0} },
+  yAxis:{ type:'value', name:'万元', nameTextStyle:{fontSize:10}, axisLabel:{fontSize:10} },
+  series:[
+    { name:'31-365天标准租', type:'bar', stack:'c', data:costStd, itemStyle:{color:'#42a5f5'} },
+    { name:'>365天基础租',   type:'bar', stack:'c', data:costBase, itemStyle:{color:'#ffa726'} },
+    { name:'>365天加收(+20%)', type:'bar', stack:'c', data:costSur, itemStyle:{color:'#c62828'},
+      label:{ show:true, position:'top', fontSize:9, color:'#c62828',
+        formatter:function(p){ return p.value>=0.1?'+'+p.value+'万':''; } }
+    }
+  ]
+});
+
+var g3 = echarts.init(document.getElementById('g3'));
+var odBase_rev = odItems.map(function(d){ return d.base; }).reverse();
+var odSur_rev  = odItems.map(function(d){ return d.sur; }).reverse();
+var odNames_rev= odItems.map(function(d){ return d.name.length>16?d.name.slice(0,15)+'…':d.name; }).reverse();
+g3.setOption({
+  tooltip:{ trigger:'axis', axisPointer:{type:'shadow'},
+    formatter:function(p){
+      var d = odItems[odItems.length-1-p[0].dataIndex];
+      return '<b>'+d.name+'</b><br/>货主：'+d.owner+'<br/>在库件数：'+d.qty.toLocaleString()+'件<br/>'
+        +'基础仓租：'+d.base.toLocaleString()+'元<br/>'
+        +'加收20%：<span style="color:#c62828">+'+d.sur.toLocaleString()+'元</span><br/>'
+        +'<b>合计：'+(d.base+d.sur).toLocaleString()+'元</b>';
+    }
+  },
+  legend:{ data:['基础仓租','加收20%'], top:0, right:0, itemWidth:10, textStyle:{fontSize:10} },
+  grid:{ left:148, right:70, top:22, bottom:8 },
+  xAxis:{ type:'value', name:'元', nameTextStyle:{fontSize:10}, axisLabel:{fontSize:10} },
+  yAxis:{ type:'category', data:odNames_rev, axisLabel:{fontSize:9, width:140, overflow:'truncate'} },
+  series:[
+    { name:'基础仓租', type:'bar', stack:'od', data:odBase_rev, itemStyle:{color:'#ffa726'}, barMaxWidth:12 },
+    { name:'加收20%',  type:'bar', stack:'od', data:odSur_rev,
+      itemStyle:{color:'#c62828', borderRadius:[0,4,4,0]}, barMaxWidth:12,
+      label:{ show:true, position:'right', fontSize:9, color:'#c62828',
+        formatter:function(p){
+          var total=odBase_rev[p.dataIndex]+odSur_rev[p.dataIndex];
+          return total>3000?(total/10000).toFixed(2)+'万':'';
+        }
+      }
+    }
+  ]
+});
+
+var g5 = echarts.init(document.getElementById('g5'));
+g5.setOption({
+  tooltip:{ trigger:'axis', formatter:function(p){ return p[0].name+'<br/>节省 '+p[0].value+'万元'; } },
+  grid:{ left:72, right:52, top:6, bottom:18 },
+  xAxis:{ type:'value', name:'万元', nameTextStyle:{fontSize:10}, axisLabel:{fontSize:10} },
+  yAxis:{ type:'category', data:[...brands].reverse(), axisLabel:{fontSize:10} },
+  series:[{ type:'bar', data:[...fsSave].reverse(), barMaxWidth:14,
+    itemStyle:{ color:'#66bb6a', borderRadius:[0,4,4,0] },
+    label:{ show:true, position:'right', fontSize:10, formatter:function(v){ return v.value+'万'; } }
+  }]
+});
+
+var g6 = echarts.init(document.getElementById('g6'));
+g6.setOption({
+  tooltip:{ trigger:'axis', axisPointer:{type:'shadow'},
+    formatter:function(p){
+      var s='<b>'+p[0].name+'</b><br/>';
+      p.forEach(function(i){ s+=i.marker+i.seriesName+': '+i.value+'万件<br/>'; });
+      return s;
+    }
+  },
+  legend:{ data:ageNames, top:0, right:0, itemWidth:10, textStyle:{fontSize:10} },
+  grid:{ left:65, right:10, top:26, bottom:48 },
+  xAxis:{ type:'category', data:brands, axisLabel:{fontSize:10, rotate:12, interval:0} },
+  yAxis:{ type:'value', name:'万件', nameTextStyle:{fontSize:10}, axisLabel:{fontSize:10} },
+  series: ageNames.map(function(name, i){
+    return {
+      name:name, type:'bar', stack:'age',
+      data: ageData.map(function(row){ return row[i]; }),
+      itemStyle:{ color:ageColors[i] },
+      label: i===5 ? { show:true, position:'top', fontSize:9, color:'#c62828',
+        formatter:function(p){ return p.value>8?p.value+'万':''; } } : {}
+    };
+  })
+});
+
+// ─────────────────────────────────────────────────────────
+// 渲染排名列表通用函数
+// ─────────────────────────────────────────────────────────
+function renderRankList(ulId, items, valFn, valLabel, barColor) {
+  var ul = document.getElementById(ulId);
+  ul.innerHTML = '';
+  if (!items || items.length === 0) {
+    ul.innerHTML = '<li class="no-data">暂无数据</li>';
+    return;
+  }
+  var top5 = items.slice(0, 5);
+  var maxVal = Math.max.apply(null, top5.map(valFn));
+  top5.forEach(function(d, i) {
+    var val = valFn(d);
+    var noClass = i===0?'n1':i===1?'n2':i===2?'n3':'nx';
+    var pct = maxVal > 0 ? (val/maxVal*100).toFixed(0) : 0;
+    var li = document.createElement('li');
+    li.className = 'rank-item';
+    li.innerHTML =
+      '<div class="rank-no '+noClass+'">'+(i+1)+'</div>'
+      +'<div class="rank-bar-wrap">'
+        +'<div class="rank-name" title="'+d.name+'">'+d.name+'</div>'
+        +'<div class="rank-bar-bg"><div class="rank-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div>'
+      +'</div>'
+      +'<div class="rank-val">'+val.toLocaleString()+' '+valLabel+'</div>';
+    ul.appendChild(li);
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+// 单产品线视图渲染
+// ─────────────────────────────────────────────────────────
+var sPie = null;
+
+function renderSingle(idx) {
+  var name   = brands[idx];
+  var age    = ageData[idx];
+  var std    = costStd[idx];
+  var base   = costBase[idx];
+  var sur    = costSur[idx];
+  var save   = fsSave[idx];
+  var totalW = std + base + sur;
+  var total365 = age[5];
+  var totalAll = age.reduce(function(a,b){return a+b;},0);
+  var riskPct  = totalAll>0 ? (total365/totalAll*100).toFixed(1) : '0.0';
+
+  // Banner
+  document.getElementById('s-name').textContent  = name;
+  document.getElementById('s-total').textContent = fmt(totalW*10000) + ' 元';
+  document.getElementById('s-save').textContent  = fmt(save*10000)   + ' 元';
+  document.getElementById('s-sur').textContent   = fmt(sur*10000)    + ' 元';
+  document.getElementById('s-risk').textContent  = riskPct + '%';
+
+  // 库龄饼图
+  if (sPie) { sPie.dispose(); }
+  sPie = echarts.init(document.getElementById('s-pie'));
+  document.getElementById('s-pie-note').textContent = '总在库 '+totalAll.toFixed(1)+' 万件';
+  document.getElementById('s-pie-note').className = 'badge '+(parseFloat(riskPct)>=40?'br':parseFloat(riskPct)>=20?'bw':'bg');
+  sPie.setOption({
+    tooltip:{ trigger:'item', formatter:'{b}: {c}万件 ({d}%)' },
+    legend:{ orient:'vertical', right:8, top:'middle', textStyle:{fontSize:11} },
+    series:[{
+      type:'pie', radius:['38%','65%'], center:['38%','50%'],
+      data: ageNames.map(function(n,i){ return { value:age[i], name:n, itemStyle:{color:ageColors[i]} }; }),
+      label:{show:false}, labelLine:{show:false},
+      emphasis:{ itemStyle:{ shadowBlur:8, shadowColor:'rgba(0,0,0,.2)' } }
+    }]
+  });
+
+  // 费用明细表
+  var stdQty  = (age[1]+age[2]+age[3]+age[4]).toFixed(1);
+  var baseQty = age[5].toFixed(1);
+  var rows = [
+    ['0–30天（免租）',   age[0].toFixed(1)+'万', '–',                       '–',                      '<span style="color:#43a047">不计费</span>'],
+    ['31–365天（标准）', stdQty+'万',             fmt(std*10000),            pct(std,totalW)+'%',       ''],
+    ['>365天（基础）',   baseQty+'万',            fmt(base*10000),           pct(base,totalW)+'%',      '<span class="ora">超龄计费</span>'],
+    ['>365天（加收20%）','↑',                     '<span class="red">+'+fmt(sur*10000)+'</span>', pct(sur,totalW)+'%', '<span class="red">⚠ 推动清库</span>'],
+    ['合计',             totalAll.toFixed(1)+'万',fmt(totalW*10000),         '100%',                   '免租节省 '+fmt(save*10000)+' 元'],
+  ];
+  var tbody = document.getElementById('s-cost-body');
+  tbody.innerHTML = '';
+  rows.forEach(function(r, ri) {
+    var tr = document.createElement('tr');
+    tr.innerHTML='<td>'+r[0]+'</td><td class="num">'+r[1]+'</td><td class="num">'+r[2]+'</td><td class="num">'+r[3]+'</td><td>'+r[4]+'</td>';
+    if (ri===rows.length-1) tr.style.fontWeight='600';
+    tbody.appendChild(tr);
+  });
+
+  // TOP5 超365天（按加收金额）
+  var myOd = odItems.filter(function(d){ return d.owner===name; })
+    .sort(function(a,b){ return b.sur-a.sur; });
+  renderRankList('s-rank-old', myOd, function(d){ return d.sur; }, '元/月', '#c62828');
+
+  // TOP5 免租最多
+  var myFree = (freeTopData[name]||[]).sort(function(a,b){ return b.save-a.save; });
+  renderRankList('s-rank-free', myFree, function(d){ return d.save; }, '元', '#43a047');
+
+  // TOP10 即将超365天
+  var myNear = (nearExpiryData[name]||[]).sort(function(a,b){ return b.age-a.age; }).slice(0,10);
+  var nearCount = document.getElementById('s-near-count');
+  var nearBody  = document.getElementById('s-near-body');
+  nearBody.innerHTML = '';
+  if (myNear.length === 0) {
+    nearCount.textContent = '暂无即将超龄货品';
+    nearCount.className = 'badge bg';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="7" class="no-data">该产品线近3个月内暂无货品面临超365天库龄风险 ✓</td>';
+    nearBody.appendChild(tr);
+  } else {
+    var totalAdd = myNear.reduce(function(a,d){ return a+d.addPerMonth; },0);
+    nearCount.textContent = '共 '+myNear.length+' 款　超龄后月增费合计 '+fmt(totalAdd)+' 元';
+    nearCount.className = 'badge bw';
+    myNear.forEach(function(d, i) {
+      var daysLeft = 365 - d.age;
+      var tagClass = daysLeft<=30?'days-30':daysLeft<=60?'days-60':'days-90';
+      var tagText  = daysLeft+'天后';
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td style="color:#888;font-size:11px;text-align:center">'+(i+1)+'</td>'
+        +'<td>'+d.name+'</td>'
+        +'<td class="num">'+d.age+' 天</td>'
+        +'<td class="num">'+d.qty.toLocaleString()+' 件</td>'
+        +'<td class="num">'+d.rentPerMonth.toLocaleString()+'</td>'
+        +'<td class="num red">+'+d.addPerMonth.toLocaleString()+'</td>'
+        +'<td style="text-align:center"><span class="days-tag '+tagClass+'">'+tagText+'</span></td>';
+      nearBody.appendChild(tr);
+    });
+  }
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('zh-CN'); }
+function pct(v, total) { return total>0?(v/total*100).toFixed(1):'0.0'; }
+
+// ─────────────────────────────────────────────────────────
+// Tab 切换
+// ─────────────────────────────────────────────────────────
+var viewAll    = document.getElementById('view-all');
+var viewSingle = document.getElementById('view-single');
+var ruleScope  = document.getElementById('rule-scope');
+
+document.querySelector('.filter-bar').addEventListener('click', function(e) {
+  var tab = e.target.closest('.ftab');
+  if (!tab) return;
+  document.querySelectorAll('.ftab').forEach(function(t){ t.classList.remove('active'); });
+  tab.classList.add('active');
+  var idx = parseInt(tab.dataset.idx);
+  if (idx === -1) {
+    viewAll.style.display = 'block';
+    viewSingle.style.display = 'none';
+    ruleScope.textContent = '仓库：全部　|　货主：培优 + 19家';
+    [g1,g3,g5,g6].forEach(function(c){ c.resize(); });
+  } else {
+    viewAll.style.display = 'none';
+    viewSingle.style.display = 'block';
+    ruleScope.textContent = '仓库：全部　|　当前产品线：' + brands[idx];
+    renderSingle(idx);
+  }
+});
+
+window.addEventListener('resize', function(){
+  [g1,g3,g5,g6].forEach(function(c){ c.resize(); });
+  if (sPie) sPie.resize();
+});
+
+}); // end load
+</script>
+</body>
+</html>
