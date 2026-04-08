@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>快递行业月度经营数据看板</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f5f5f3;
+    --bg2:       #ffffff;
+    --bg3:       #fafaf8;
+    --border:    #e8e8e4;
+    --border2:   #d4d4ce;
+    --text:      #1a1a18;
+    --text2:     #5a5a54;
+    --text3:     #9a9a92;
+
+    --yt:  #c8962a;
+    --st:  #2478c8;
+    --yd:  #7854c8;
+    --sf:  #c84c14;
+
+    --yt-bg: #fdf6e8;
+    --st-bg: #e8f2fd;
+    --yd-bg: #f2eeff;
+    --sf-bg: #fdf0eb;
+
+    --green: #1a7a4a;
+    --green-bg: #eaf5ee;
+    --red:   #b83232;
+    --red-bg: #fdf0f0;
+
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --shadow2: 0 4px 12px rgba(0,0,0,.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', 'Inter', -apple-system, sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .header-left h1 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  .header-left p {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .company-legend {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 5px 12px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text2);
+    transition: all .18s;
+    user-select: none;
+  }
+  .legend-item:hover { border-color: var(--border2); }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+  .legend-item[data-co="圆通速递"].active { background: var(--yt-bg); border-color: var(--yt); color: var(--yt); }
+  .legend-item[data-co="申通快递"].active { background: var(--st-bg); border-color: var(--st); color: var(--st); }
+  .legend-item[data-co="韵达股份"].active { background: var(--yd-bg); border-color: var(--yd); color: var(--yd); }
+  .legend-item[data-co="顺丰控股"].active { background: var(--sf-bg); border-color: var(--sf); color: var(--sf); }
+
+  .legend-item[data-co="圆通速递"] .legend-dot { background: var(--yt); }
+  .legend-item[data-co="申通快递"] .legend-dot { background: var(--st); }
+  .legend-item[data-co="韵达股份"] .legend-dot { background: var(--yd); }
+  .legend-item[data-co="顺丰控股"] .legend-dot { background: var(--sf); }
+
+  /* ── Metric tabs ── */
+  .metric-bar {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text3);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text2); }
+  .tab-btn.active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
+
+  /* ── Main ── */
+  .main {
+    padding: 24px 40px 48px;
+    display: grid;
+    gap: 18px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* ── KPI Row ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media(max-width:900px) { .kpi-row { grid-template-columns: repeat(2,1fr); } }
+
+  .kpi-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card[data-co="圆通速递"]::before { background: var(--yt); }
+  .kpi-card[data-co="申通快递"]::before { background: var(--st); }
+  .kpi-card[data-co="韵达股份"]::before { background: var(--yd); }
+  .kpi-card[data-co="顺丰控股"]::before { background: var(--sf); }
+
+  .kpi-co {
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+    letter-spacing: -0.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .kpi-unit { font-size: 12px; font-weight: 400; color: var(--text3); margin-left: 3px; }
+  .kpi-meta {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .badge.pos { background: var(--green-bg); color: var(--green); }
+  .badge.neg { background: var(--red-bg);   color: var(--red); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card-head {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .card-sub {
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .chart-main { height: 340px; padding: 8px 4px 4px; }
+  .chart-yoy  { height: 260px; padding: 8px 4px 4px; }
+
+  /* ── Table ── */
+  .month-chips-wrap {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .chips-label { font-size: 11px; color: var(--text3); white-space: nowrap; }
+  .chips { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .chip {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--text3);
+    transition: all .14s;
+    user-select: none;
+    background: var(--bg3);
+  }
+  .chip:hover { border-color: var(--border2); color: var(--text2); }
+  .chip.selected { background: var(--text); color: #fff; border-color: var(--text); }
+  .year-tag {
+    font-size: 10px;
+    color: var(--text3);
+    font-weight: 500;
+    margin: 0 4px;
+  }
+
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    padding: 9px 14px;
+    text-align: right;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  tbody td {
+    padding: 9px 14px;
+    text-align: right;
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  tbody td:first-child { text-align: left; color: var(--text2); }
+  .co-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .tbl-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    min-width: 58px;
+    text-align: center;
+  }
+  .tbl-badge.pos { background: var(--green-bg); color: var(--green); }
+  .tbl-badge.neg { background: var(--red-bg);   color: var(--red); }
+
+  .note {
+    padding: 10px 20px;
+    font-size: 11px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    background: var(--bg3);
+    line-height: 1.6;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .kpi-row  { animation: fadeUp .3s ease both; }
+  .card     { animation: fadeUp .3s ease both; }
+  .card:nth-child(2) { animation-delay:.04s; }
+  .card:nth-child(3) { animation-delay:.08s; }
+  .card:nth-child(4) { animation-delay:.12s; }
+
+  footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  @media(max-width:768px) {
+    header, .metric-bar, .main { padding-left:16px; padding-right:16px; }
+  }
+
+  /* ── 视图切换分隔线 ── */
+  .metric-bar-divider {
+    width: 1px;
+    background: var(--border);
+    margin: 8px 6px;
+    align-self: stretch;
+  }
+  .view-btn { font-style: italic; }
+  .view-btn.active { color: var(--text); font-weight: 600; border-bottom-color: #7854c8; }
+
+  /* ── 汇总页面专用 ── */
+  .sum-section-label {
+    font-size: 12px;
+    color: var(--text3);
+    font-weight: 500;
+    letter-spacing: 0.4px;
+    padding: 4px 0 2px;
+    text-transform: uppercase;
+  }
+
+  .sum-top-grid {
+    display: flex;
+    gap: 18px;
+  }
+  @media(max-width:900px) { .sum-top-grid { flex-direction:column; } }
+
+  /* 环比网格 */
+  #momGrid {
+    padding: 12px 16px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .mom-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--bg3);
+    position: relative;
+    overflow: hidden;
+  }
+  .mom-card::before {
+    content:'';
+    position:absolute;
+    top:0; left:0; bottom:0;
+    width:3px;
+    border-radius:2px 0 0 2px;
+  }
+  .mom-card[data-co="圆通速递"]::before { background: var(--yt); }
+  .mom-card[data-co="申通快递"]::before { background: var(--st); }
+  .mom-card[data-co="韵达股份"]::before { background: var(--yd); }
+  .mom-card[data-co="顺丰控股"]::before { background: var(--sf); }
+  .mom-co {
+    font-size: 11px;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .mom-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .mom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .mom-label { font-size: 11px; color: var(--text3); }
+  .mom-val {
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .mom-val.pos { color: var(--green); }
+  .mom-val.neg { color: var(--red); }
+  .mom-val.flat { color: var(--text3); }
+
+  /* 热力表 */
+  .heatmap-metric-tabs {
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 0;
+  }
+  .hm-tab {
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 12px; color: var(--text3);
+    padding: 9px 14px; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all .15s;
+  }
+  .hm-tab:hover { color: var(--text2); }
+  .hm-tab.active { color: var(--text); font-weight: 500; border-bottom-color: var(--text); }
+
+  .heat-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .heat-table th {
+    padding: 9px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .heat-table th:first-child { text-align: left; padding-left: 20px; }
+  .heat-table td {
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .heat-table td:first-child { text-align: left; padding-left: 20px; font-size: 12px; }
+  .heat-table tr:last-child td { border-bottom: none; }
+  .heat-cell {
+    display: inline-block;
+    min-width: 52px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  /* 汇总统计表 */
+  #sumTable {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  #sumTable th {
+    padding: 9px 14px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    white-space: nowrap;
+  }
+  #sumTable th:first-child { text-align: left; }
+  #sumTable td {
+    padding: 10px 14px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  #sumTable td:first-child { text-align: left; }
+  #sumTable tr:last-child td { border-bottom: none; }
+  #sumTable tr:hover td { background: var(--bg3); }
+  .sum-co-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>快递行业月度经营数据看板</h1>
+    <p>2025年01月 — 2026年02月 · 数据来源：各公司公告 / 东方财富网</p>
+  </div>
+  <div class="company-legend">
+    <div class="legend-item active" data-co="圆通速递"><div class="legend-dot"></div>圆通速递</div>
+    <div class="legend-item active" data-co="申通快递"><div class="legend-dot"></div>申通快递</div>
+    <div class="legend-item active" data-co="韵达股份"><div class="legend-dot"></div>韵达股份</div>
+    <div class="legend-item active" data-co="顺丰控股"><div class="legend-dot"></div>顺丰控股</div>
+  </div>
+</header>
+
+<div class="metric-bar">
+  <button class="tab-btn active" data-metric="revenue">快递收入（亿元）</button>
+  <button class="tab-btn" data-metric="volume">业务量（亿票）</button>
+  <button class="tab-btn" data-metric="unit_price">单票收入（元）</button>
+  <button class="tab-btn" data-metric="yoy">同比增速（%）</button>
+  <div class="metric-bar-divider"></div>
+  <button class="tab-btn view-btn" data-view="detail" id="viewDetail">明细视图</button>
+  <button class="tab-btn view-btn" data-view="summary" id="viewSummary">汇总总览</button>
+</div>
+
+<!-- 明细视图 -->
+<div class="main" id="viewDetailPane">
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title" id="chartTitle">趋势走势 · 快递收入（亿元）</span>
+      <span class="card-sub">各公司月度对比 · 数值标注于折线端点</span>
+    </div>
+    <div class="chart-main" id="mainChart"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title" id="yoyTitle">同比增速 · 快递收入（%）</span>
+      <span class="card-sub">月度同比增速柱状对比</span>
+    </div>
+    <div class="chart-yoy" id="yoyChart"></div>
+  </div>
+
+  <div class="card" id="tableCard">
+    <div class="card-head">
+      <span class="card-title">明细数据</span>
+      <span class="card-sub" id="tableRange"></span>
+    </div>
+    <div class="month-chips-wrap">
+      <span class="chips-label">月份筛选</span>
+      <div class="chips" id="monthChips"></div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="note">★ 申通快递自2025年11月起合并丹鸟物流，口径扩大。顺丰数据仅含速运物流业务（时效件/经济件/快运/冷链/即配），不含供应链及国际业务。</div>
+  </div>
+</div>
+
+<!-- 汇总总览视图 -->
+<div class="main" id="viewSummaryPane" style="display:none">
+  <!-- 最新月 KPI -->
+  <div class="sum-section-label">最新月份概览 · <span id="sumLatestMonth"></span></div>
+
+  <!-- 最新月横向对比 + 环比卡片 -->
+  <div class="sum-top-grid">
+    <div class="card" style="flex:1.4;min-width:0">
+      <div class="card-head">
+        <span class="card-title">最新月横向对比</span>
+        <span class="card-sub">四家公司核心指标排名</span>
+      </div>
+      <div id="rankChart" style="height:300px;padding:8px 4px 4px"></div>
+    </div>
+    <div class="card" style="flex:1;min-width:0">
+      <div class="card-head">
+        <span class="card-title">环比变化 · 本月 vs 上月</span>
+        <span class="card-sub" id="momSubtitle"></span>
+      </div>
+      <div id="momGrid"></div>
+    </div>
+  </div>
+
+  <!-- 增速热力表 -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">增速热力表</span>
+      <span class="card-sub">同比增速 · 颜色越深增速越高，灰色为负增长</span>
+    </div>
+    <div class="heatmap-metric-tabs" id="heatmapTabs">
+      <button class="hm-tab active" data-hm="revenue_yoy">收入同比</button>
+      <button class="hm-tab" data-hm="volume_yoy">业务量同比</button>
+      <button class="hm-tab" data-hm="unit_price_yoy">单票同比</button>
+    </div>
+    <div class="table-scroll" style="padding:0 0 8px">
+      <table id="heatTable" class="heat-table"></table>
+    </div>
+  </div>
+
+  <!-- 全周期汇总统计 -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">全周期汇总统计</span>
+      <span class="card-sub">2025-01 至 2026-02 · 共14个月</span>
+    </div>
+    <div class="table-scroll">
+      <table id="sumTable"></table>
+    </div>
+    <div class="note">★ 申通快递自2025年11月起合并丹鸟物流，口径扩大。顺丰数据仅含速运物流业务，不含供应链及国际业务。</div>
+  </div>
+</div>
+
+<footer>快递行业月度经营数据看板 · 2025-01 至 2026-02 · 数据来源：各公司公告</footer>
+
+<script>
+// ══════════════════════════════════
+// 数据
+// ══════════════════════════════════
+const RAW = {
+  "圆通速递": [
+    {month:"2025-01",revenue:53.40,revenue_yoy:1.50,  volume:22.68,volume_yoy:5.46,  unit_price:2.35,unit_price_yoy:-3.76},
+    {month:"2025-02",revenue:42.90,revenue_yoy:36.47, volume:18.46,volume_yoy:48.78, unit_price:2.32,unit_price_yoy:-8.27},
+    {month:"2025-03",revenue:58.11,revenue_yoy:13.40, volume:26.65,volume_yoy:22.48, unit_price:2.18,unit_price_yoy:-7.42},
+    {month:"2025-04",revenue:57.55,revenue_yoy:16.32, volume:26.93,volume_yoy:25.27, unit_price:2.14,unit_price_yoy:-7.14},
+    {month:"2025-05",revenue:58.49,revenue_yoy:14.85, volume:27.64,volume_yoy:21.02, unit_price:2.12,unit_price_yoy:-5.09},
+    {month:"2025-06",revenue:55.27,revenue_yoy:11.35, volume:26.27,volume_yoy:19.34, unit_price:2.10,unit_price_yoy:-6.69},
+    {month:"2025-07",revenue:53.71,revenue_yoy:12.08, volume:25.83,volume_yoy:20.79, unit_price:2.08,unit_price_yoy:-7.20},
+    {month:"2025-08",revenue:53.90,revenue_yoy:9.82,  volume:25.11,volume_yoy:11.08, unit_price:2.15,unit_price_yoy:-1.13},
+    {month:"2025-09",revenue:57.99,revenue_yoy:14.89, volume:26.27,volume_yoy:13.64, unit_price:2.21,unit_price_yoy:1.09},
+    {month:"2025-10",revenue:62.16,revenue_yoy:8.97,  volume:27.90,volume_yoy:12.78, unit_price:2.23,unit_price_yoy:-3.38},
+    {month:"2025-11",revenue:64.74,revenue_yoy:11.08, volume:28.86,volume_yoy:13.55, unit_price:2.24,unit_price_yoy:-2.17},
+    {month:"2025-12",revenue:64.96,revenue_yoy:7.48,  volume:28.84,volume_yoy:9.04,  unit_price:2.25,unit_price_yoy:-1.43},
+    {month:"2026-01",revenue:66.12,revenue_yoy:23.82, volume:29.43,volume_yoy:29.75, unit_price:2.25,unit_price_yoy:-4.57},
+    {month:"2026-02",revenue:44.52,revenue_yoy:3.76,  volume:18.57,volume_yoy:0.59,  unit_price:2.40,unit_price_yoy:3.15},
+  ],
+  "申通快递": [
+    {month:"2025-01",revenue:41.69,revenue_yoy:5.11,  volume:20.23,volume_yoy:11.77, unit_price:2.06,unit_price_yoy:-5.94},
+    {month:"2025-02",revenue:34.66,revenue_yoy:48.03, volume:16.99,volume_yoy:63.39, unit_price:2.04,unit_price_yoy:-9.33},
+    {month:"2025-03",revenue:41.89,revenue_yoy:14.70, volume:20.85,volume_yoy:20.05, unit_price:2.01,unit_price_yoy:-4.29},
+    {month:"2025-04",revenue:41.18,revenue_yoy:16.39, volume:20.92,volume_yoy:20.98, unit_price:1.97,unit_price_yoy:-3.90},
+    {month:"2025-05",revenue:44.10,revenue_yoy:13.01, volume:22.64,volume_yoy:16.35, unit_price:1.95,unit_price_yoy:-2.99},
+    {month:"2025-06",revenue:43.41,revenue_yoy:10.15, volume:21.84,volume_yoy:11.14, unit_price:1.99,unit_price_yoy:-1.00},
+    {month:"2025-07",revenue:42.87,revenue_yoy:9.95,  volume:21.81,volume_yoy:11.92, unit_price:1.97,unit_price_yoy:-1.50},
+    {month:"2025-08",revenue:44.34,revenue_yoy:14.47, volume:21.47,volume_yoy:10.92, unit_price:2.06,unit_price_yoy:3.00},
+    {month:"2025-09",revenue:46.33,revenue_yoy:14.89, volume:21.87,volume_yoy:9.46,  unit_price:2.12,unit_price_yoy:4.95},
+    {month:"2025-10",revenue:49.50,revenue_yoy:11.84, volume:22.73,volume_yoy:3.97,  unit_price:2.18,unit_price_yoy:7.39},
+    {month:"2025-11",revenue:60.28,revenue_yoy:33.10, volume:25.02,volume_yoy:14.67, unit_price:2.41,unit_price_yoy:15.87,note:"含丹鸟"},
+    {month:"2025-12",revenue:58.36,revenue_yoy:28.23, volume:25.01,volume_yoy:11.09, unit_price:2.33,unit_price_yoy:15.35,note:"含丹鸟"},
+    {month:"2026-01",revenue:59.73,revenue_yoy:43.26, volume:25.40,volume_yoy:25.57, unit_price:2.35,unit_price_yoy:14.08,note:"含丹鸟"},
+    {month:"2026-02",revenue:39.08,revenue_yoy:12.76, volume:16.00,volume_yoy:-5.85, unit_price:2.44,unit_price_yoy:19.61,note:"含丹鸟"},
+  ],
+  "韵达股份": [
+    {month:"2025-01",revenue:40.69,revenue_yoy:-8.36, volume:20.13,volume_yoy:2.86,  unit_price:2.02,unit_price_yoy:-11.01},
+    {month:"2025-02",revenue:35.37,revenue_yoy:45.32, volume:18.10,volume_yoy:69.95, unit_price:1.95,unit_price_yoy:-14.85},
+    {month:"2025-03",revenue:44.10,revenue_yoy:10.55, volume:22.53,volume_yoy:17.34, unit_price:1.96,unit_price_yoy:-5.77},
+    {month:"2025-04",revenue:41.51,revenue_yoy:5.84,  volume:21.74,volume_yoy:13.41, unit_price:1.91,unit_price_yoy:-6.83},
+    {month:"2025-05",revenue:44.15,revenue_yoy:6.75,  volume:23.03,volume_yoy:12.78, unit_price:1.92,unit_price_yoy:-5.42},
+    {month:"2025-06",revenue:41.49,revenue_yoy:2.77,  volume:21.73,volume_yoy:7.41,  unit_price:1.91,unit_price_yoy:-4.50},
+    {month:"2025-07",revenue:41.20,revenue_yoy:3.75,  volume:21.62,volume_yoy:7.56,  unit_price:1.91,unit_price_yoy:-3.54},
+    {month:"2025-08",revenue:41.19,revenue_yoy:5.16,  volume:21.45,volume_yoy:8.72,  unit_price:1.92,unit_price_yoy:-3.52},
+    {month:"2025-09",revenue:42.52,revenue_yoy:4.14,  volume:21.10,volume_yoy:3.63,  unit_price:2.02,unit_price_yoy:0.50},
+    {month:"2025-10",revenue:44.95,revenue_yoy:-0.88, volume:21.35,volume_yoy:-5.11, unit_price:2.11,unit_price_yoy:4.46},
+    {month:"2025-11",revenue:46.98,revenue_yoy:2.17,  volume:21.75,volume_yoy:-4.19, unit_price:2.16,unit_price_yoy:6.40},
+    {month:"2025-12",revenue:46.26,revenue_yoy:-1.49, volume:21.48,volume_yoy:-7.37, unit_price:2.15,unit_price_yoy:5.91},
+    {month:"2026-01",revenue:48.02,revenue_yoy:18.01, volume:22.31,volume_yoy:10.83, unit_price:2.15,unit_price_yoy:6.44},
+    {month:"2026-02",revenue:30.04,revenue_yoy:-15.07,volume:13.37,volume_yoy:-26.13,unit_price:2.25,unit_price_yoy:15.38},
+  ],
+  "顺丰控股": [
+    {month:"2025-01",revenue:207.63,revenue_yoy:6.47,  volume:13.30,volume_yoy:15.95, unit_price:15.61,unit_price_yoy:-8.18},
+    {month:"2025-02",revenue:131.49,revenue_yoy:3.81,  volume:9.16, volume_yoy:17.74, unit_price:14.35,unit_price_yoy:-11.86},
+    {month:"2025-03",revenue:178.97,revenue_yoy:10.61, volume:12.95,volume_yoy:25.36, unit_price:13.82,unit_price_yoy:-11.75},
+    {month:"2025-04",revenue:180.03,revenue_yoy:11.85, volume:13.35,volume_yoy:29.99, unit_price:13.49,unit_price_yoy:-13.91},
+    {month:"2025-05",revenue:193.81,revenue_yoy:13.36, volume:14.77,volume_yoy:31.76, unit_price:13.12,unit_price_yoy:-13.97},
+    {month:"2025-06",revenue:199.62,revenue_yoy:14.24, volume:14.60,volume_yoy:31.77, unit_price:13.67,unit_price_yoy:-13.32},
+    {month:"2025-07",revenue:186.57,revenue_yoy:14.97, volume:13.77,volume_yoy:33.69, unit_price:13.55,unit_price_yoy:-14.02},
+    {month:"2025-08",revenue:186.57,revenue_yoy:14.14, volume:14.06,volume_yoy:34.80, unit_price:13.27,unit_price_yoy:-15.32},
+    {month:"2025-09",revenue:208.54,revenue_yoy:14.21, volume:15.04,volume_yoy:31.81, unit_price:13.87,unit_price_yoy:-13.31},
+    {month:"2025-10",revenue:200.91,revenue_yoy:13.68, volume:15.24,volume_yoy:26.26, unit_price:13.18,unit_price_yoy:-9.97},
+    {month:"2025-11",revenue:206.60,revenue_yoy:9.88,  volume:15.34,volume_yoy:20.13, unit_price:13.47,unit_price_yoy:-8.49},
+    {month:"2025-12",revenue:203.78,revenue_yoy:3.78,  volume:14.76,volume_yoy:9.33,  unit_price:13.81,unit_price_yoy:-5.09},
+    {month:"2026-01",revenue:203.96,revenue_yoy:-1.77, volume:13.86,volume_yoy:4.21,  unit_price:14.72,unit_price_yoy:-5.70},
+    {month:"2026-02",revenue:164.21,revenue_yoy:24.88, volume:10.72,volume_yoy:17.03, unit_price:15.32,unit_price_yoy:6.76},
+  ],
+};
+
+const CO_COLOR = { "圆通速递":"#c8962a","申通快递":"#2478c8","韵达股份":"#7854c8","顺丰控股":"#c84c14" };
+const CO_DOT   = { "圆通速递":"#c8962a","申通快递":"#2478c8","韵达股份":"#7854c8","顺丰控股":"#c84c14" };
+const ALL_MONTHS = [...new Set(Object.values(RAW).flatMap(a=>a.map(d=>d.month)))].sort();
+const ALL_COS    = Object.keys(RAW);
+
+let activeCos    = new Set(ALL_COS);
+let activeMonths = new Set(ALL_MONTHS);
+let metric       = "revenue";
+
+const METRICS = {
+  revenue:    {label:"快递收入",    unit:"亿元", valKey:"revenue",    yoyKey:"revenue_yoy"},
+  volume:     {label:"业务量",      unit:"亿票", valKey:"volume",     yoyKey:"volume_yoy"},
+  unit_price: {label:"单票收入",    unit:"元",   valKey:"unit_price", yoyKey:"unit_price_yoy"},
+  yoy:        {label:"同比增速",    unit:"%",    valKey:null,         yoyKey:null},
+};
+
+// ECharts
+const mainEC = echarts.init(document.getElementById('mainChart'));
+const yoyEC  = echarts.init(document.getElementById('yoyChart'));
+
+const BASE = {
+  backgroundColor:'transparent',
+  animation: true,
+  animationDuration: 500,
+  grid:{ top:32, right:20, bottom:40, left:56 },
+  tooltip:{
+    trigger:'axis',
+    backgroundColor:'#fff',
+    borderColor:'#e8e8e4',
+    borderWidth:1,
+    padding:[10,14],
+    textStyle:{ color:'#1a1a18', fontSize:12, fontFamily:'Noto Sans SC,sans-serif' },
+    extraCssText:'border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.1);',
+    axisPointer:{ lineStyle:{ color:'#d4d4ce', type:'dashed' } }
+  },
+  legend:{ show:false },
+  xAxis:{
+    type:'category', data:[],
+    axisLine:{ lineStyle:{ color:'#e8e8e4' } },
+    axisTick:{ show:false },
+    axisLabel:{ color:'#9a9a92', fontSize:11, fontFamily:'Inter,sans-serif' },
+    splitLine:{ show:false },
+  },
+  yAxis:{
+    type:'value',
+    axisLine:{ show:false },
+    axisTick:{ show:false },
+    axisLabel:{ color:'#9a9a92', fontSize:11, fontFamily:'Inter,sans-serif' },
+    splitLine:{ lineStyle:{ color:'#f0f0ec', type:'solid' } },
+  },
+};
+
+function visMonths() { return ALL_MONTHS.filter(m => activeMonths.has(m)); }
+
+// ── 折线图 ──
+function buildLineSeries() {
+  const months = visMonths();
+  const isYoy = metric === 'yoy';
+  const m = METRICS[metric];
+
+  return [...activeCos].map(co => {
+    const coData = months.map(month => {
+      const row = RAW[co].find(r => r.month === month);
+      if (!row) return null;
+      return isYoy ? row.revenue_yoy : row[m.valKey];
+    });
+    return {
+      name: co, type:'line',
+      data: coData,
+      smooth: 0.25,
+      showSymbol: true,
+      symbol: 'circle', symbolSize: 5,
+      lineStyle:{ color: CO_COLOR[co], width: 2 },
+      itemStyle:{ color: CO_COLOR[co], borderColor:'#fff', borderWidth:2 },
+      emphasis:{ focus:'series', lineStyle:{width:3} },
+      // 只在最后一个点显示数值标签
+      label:{
+        show: true,
+        formatter: params => {
+          if (params.dataIndex !== months.length - 1) return '';
+          if (params.value == null) return '';
+          return params.value.toFixed(isYoy ? 1 : 2);
+        },
+        color: CO_COLOR[co],
+        fontSize: 11,
+        fontWeight: 600,
+        fontFamily: 'Inter,sans-serif',
+        position: 'right',
+        offset: [4, 0],
+      },
+    };
+  });
+}
+
+// ── 同比柱状图 ──
+function buildBarSeries() {
+  const months = visMonths();
+  const yoyKey = metric === 'yoy' ? 'revenue_yoy' : METRICS[metric].yoyKey;
+
+  return [...activeCos].map(co => ({
+    name: co, type:'bar',
+    data: months.map(month => {
+      const row = RAW[co].find(r => r.month === month);
+      return row ? (row[yoyKey] ?? null) : null;
+    }),
+    itemStyle:{
+      color: CO_COLOR[co],
+      borderRadius:[3,3,0,0],
+      opacity: 0.85,
+    },
+    emphasis:{ itemStyle:{ opacity:1 } },
+    barMaxWidth: 14,
+    // 数值标签
+    label:{
+      show: true,
+      position: 'top',
+      formatter: p => p.value != null ? (p.value > 0 ? '+' : '') + p.value.toFixed(1) + '%' : '',
+      color: '#9a9a92',
+      fontSize: 9,
+      fontFamily: 'Inter,sans-serif',
+      rotate: 90,
+      distance: 4,
+    },
+  }));
+}
+
+function renderCharts() {
+  const months = visMonths();
+  const isYoy = metric === 'yoy';
+  const m = METRICS[metric];
+
+  // 折线图
+  mainEC.setOption({
+    ...BASE,
+    grid:{ top:16, right:80, bottom:40, left:56 },
+    xAxis:{ ...BASE.xAxis, data: months },
+    yAxis:{
+      ...BASE.yAxis,
+      axisLabel:{
+        ...BASE.yAxis.axisLabel,
+        formatter: isYoy ? (v => v+'%') : undefined,
+      }
+    },
+    series: buildLineSeries(),
+    tooltip:{
+      ...BASE.tooltip,
+      formatter: params => {
+        let s = `<div style="font-weight:500;margin-bottom:6px;color:#5a5a54;">${params[0]?.axisValue}</div>`;
+        params.forEach(p => {
+          if (p.value == null) return;
+          const row = RAW[p.seriesName].find(r => r.month === p.axisValue);
+          const yoyV = isYoy ? null : (row ? row[m.yoyKey] : null);
+          const yoyStr = yoyV != null
+            ? `<span style="margin-left:8px;font-size:11px;color:${yoyV>=0?'#1a7a4a':'#b83232'}">${yoyV>0?'+':''}${yoyV.toFixed(1)}%</span>`
+            : '';
+          s += `<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
+            <span style="display:inline-block;width:8px;height:2px;background:${p.color};border-radius:1px;flex-shrink:0"></span>
+            <span style="min-width:60px;color:#5a5a54">${p.seriesName}</span>
+            <span style="font-weight:600;font-variant-numeric:tabular-nums">${p.value}${isYoy?'%':' '+m.unit}</span>${yoyStr}
+          </div>`;
+        });
+        return s;
+      }
+    },
+  }, true);
+
+  // 柱状图
+  yoyEC.setOption({
+    ...BASE,
+    grid:{ top:24, right:20, bottom:40, left:56 },
+    xAxis:{ ...BASE.xAxis, data: months },
+    yAxis:{
+      ...BASE.yAxis,
+      axisLabel:{ ...BASE.yAxis.axisLabel, formatter: v => v+'%' },
+    },
+    series: buildBarSeries(),
+    tooltip:{
+      ...BASE.tooltip,
+      formatter: params => {
+        const yoyKey2 = metric==='yoy' ? 'revenue_yoy' : METRICS[metric].yoyKey;
+        let s = `<div style="font-weight:500;margin-bottom:6px;color:#5a5a54;">${params[0]?.axisValue} 同比增速</div>`;
+        params.forEach(p => {
+          if (p.value == null) return;
+          s += `<div style="display:flex;align-items:center;gap:8px;padding:2px 0">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color};flex-shrink:0"></span>
+            <span style="min-width:60px;color:#5a5a54">${p.seriesName}</span>
+            <span style="font-weight:600;color:${p.value>=0?'#1a7a4a':'#b83232'}">${p.value>0?'+':''}${p.value.toFixed(1)}%</span>
+          </div>`;
+        });
+        return s;
+      }
+    },
+  }, true);
+}
+
+// ── KPI ──
+function renderKPI() {
+  const row = document.getElementById('kpiRow');
+  row.innerHTML = '';
+  const latestMonth = ALL_MONTHS[ALL_MONTHS.length-1];
+  const dispMetric = metric === 'yoy' ? 'revenue' : metric;
+  const m = METRICS[dispMetric];
+
+  ALL_COS.forEach(co => {
+    const d = RAW[co].find(r => r.month === latestMonth);
+    if (!d) return;
+    const val = d[m.valKey];
+    const yoy = d[m.yoyKey];
+    const dim = !activeCos.has(co) ? 'opacity:.35;' : '';
+    const yoyHtml = yoy != null
+      ? `<span class="badge ${yoy>=0?'pos':'neg'}">${yoy>=0?'▲':'▼'} ${Math.abs(yoy).toFixed(1)}%</span>`
+      : '';
+    row.innerHTML += `
+      <div class="kpi-card" data-co="${co}" style="${dim}">
+        <div class="kpi-co">${co}</div>
+        <div class="kpi-value">${val != null ? val.toFixed(2) : '--'}<span class="kpi-unit">${m.unit}</span></div>
+        <div class="kpi-meta">${latestMonth} ${yoyHtml}</div>
+      </div>`;
+  });
+}
+
+// ── 表格 ──
+function renderTable() {
+  const months = visMonths();
+  document.getElementById('tableRange').textContent =
+    months.length ? `${months[0]} — ${months[months.length-1]}` : '';
+
+  document.getElementById('tableHead').innerHTML = `<tr>
+    <th>月份 / 公司</th>
+    <th>收入（亿元）</th><th>收入同比</th>
+    <th>业务量（亿票）</th><th>量同比</th>
+    <th>单票收入（元）</th><th>单票同比</th>
+  </tr>`;
+
+  const tb = document.getElementById('tableBody');
+  tb.innerHTML = '';
+  months.forEach(month => {
+    ALL_COS.filter(co => activeCos.has(co)).forEach(co => {
+      const d = RAW[co].find(r => r.month === month);
+      if (!d) return;
+      const b = (v) => {
+        if (v == null) return '<span style="color:#ccc">—</span>';
+        const cls = v>=0?'pos':'neg';
+        return `<span class="tbl-badge ${cls}">${v>0?'+':''}${v.toFixed(1)}%</span>`;
+      };
+      tb.innerHTML += `<tr>
+        <td>
+          <span class="co-dot" style="background:${CO_DOT[co]}"></span>
+          <span style="color:#9a9a92;margin-right:4px">${month}</span>${co}
+          ${d.note?`<span style="font-size:10px;color:#c8962a;margin-left:4px">★${d.note}</span>`:''}
+        </td>
+        <td>${d.revenue.toFixed(2)}</td>
+        <td>${b(d.revenue_yoy)}</td>
+        <td>${d.volume.toFixed(2)}</td>
+        <td>${b(d.volume_yoy)}</td>
+        <td>${d.unit_price.toFixed(2)}</td>
+        <td>${b(d.unit_price_yoy)}</td>
+      </tr>`;
+    });
+  });
+}
+
+// ── 月份筛选器 ──
+function renderChips() {
+  const wrap = document.getElementById('monthChips');
+  wrap.innerHTML = '';
+  let lastYear = '';
+  ALL_MONTHS.forEach(m => {
+    const year = m.slice(0,4);
+    if (year !== lastYear) {
+      const t = document.createElement('span');
+      t.className = 'year-tag';
+      t.textContent = year;
+      wrap.appendChild(t);
+      lastYear = year;
+    }
+    const el = document.createElement('div');
+    el.className = 'chip' + (activeMonths.has(m) ? ' selected' : '');
+    el.textContent = m.slice(5);
+    el.title = m;
+    el.addEventListener('click', () => {
+      if (activeMonths.has(m)) { if (activeMonths.size > 1) activeMonths.delete(m); }
+      else activeMonths.add(m);
+      renderAll();
+    });
+    wrap.appendChild(el);
+  });
+}
+
+// ── 标题更新 ──
+function updateTitles() {
+  const isYoy = metric === 'yoy';
+  const m = METRICS[isYoy ? 'revenue' : metric];
+  document.getElementById('chartTitle').textContent =
+    `趋势走势 · ${isYoy ? '快递收入同比增速（%）' : m.label+'（'+m.unit+'）'}`;
+  document.getElementById('yoyTitle').textContent =
+    `同比增速 · ${isYoy ? '快递收入' : m.label}（%）`;
+}
+
+function renderAll() {
+  renderKPI();
+  renderCharts();
+  renderTable();
+  renderChips();
+  updateTitles();
+}
+
+// ── 事件 ──
+document.querySelectorAll('.legend-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const co = el.dataset.co;
+    if (activeCos.has(co)) {
+      if (activeCos.size > 1) { activeCos.delete(co); el.classList.remove('active'); }
+    } else {
+      activeCos.add(co); el.classList.add('active');
+    }
+    renderAll();
+  });
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    metric = btn.dataset.metric;
+    renderAll();
+  });
+});
+
+window.addEventListener('resize', () => {
+  mainEC.resize(); yoyEC.resize();
+  if (rankEC) rankEC.resize();
+});
+
+// ══════════════════════════════════
+// 视图切换
+// ══════════════════════════════════
+let currentView = 'detail';
+let rankEC = null;
+let hmMetric = 'revenue_yoy';
+
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentView = btn.dataset.view;
+    if (currentView === 'detail') {
+      document.getElementById('viewDetailPane').style.display = '';
+      document.getElementById('viewSummaryPane').style.display = 'none';
+    } else {
+      document.getElementById('viewDetailPane').style.display = 'none';
+      document.getElementById('viewSummaryPane').style.display = '';
+      renderSummary();
+    }
+  });
+});
+
+// ══════════════════════════════════
+// 汇总视图
+// ══════════════════════════════════
+function getMoM(co, field) {
+  const arr = RAW[co];
+  const last = arr[arr.length - 1];
+  const prev = arr[arr.length - 2];
+  if (!last || !prev) return null;
+  const cur = last[field], pre = prev[field];
+  if (cur == null || pre == null || pre === 0) return null;
+  return ((cur - pre) / Math.abs(pre)) * 100;
+}
+function getMoMVal(co, field) {
+  const arr = RAW[co];
+  const last = arr[arr.length - 1];
+  const prev = arr[arr.length - 2];
+  if (!last || !prev) return {cur: null, prev: null, diff: null, pct: null};
+  const cur = last[field], pre = prev[field];
+  const diff = cur - pre;
+  const pct = pre !== 0 ? (diff / Math.abs(pre)) * 100 : null;
+  return {cur, prev: pre, diff, pct};
+}
+
+function fmtMom(pct, unit='%') {
+  if (pct == null) return {txt:'—', cls:'flat'};
+  const sign = pct > 0 ? '+' : '';
+  return { txt: sign + pct.toFixed(1) + '%', cls: pct > 0 ? 'pos' : pct < 0 ? 'neg' : 'flat' };
+}
+function fmtDiff(diff, unit) {
+  if (diff == null) return '—';
+  const sign = diff > 0 ? '+' : '';
+  return sign + diff.toFixed(2) + unit;
+}
+
+function renderMomGrid() {
+  const latestMonth = ALL_MONTHS[ALL_MONTHS.length - 1];
+  const prevMonth   = ALL_MONTHS[ALL_MONTHS.length - 2];
+  document.getElementById('momSubtitle').textContent = `${prevMonth} → ${latestMonth}`;
+
+  const grid = document.getElementById('momGrid');
+  grid.innerHTML = '';
+
+  ALL_COS.forEach(co => {
+    const rv = getMoMVal(co, 'revenue');
+    const vl = getMoMVal(co, 'volume');
+    const up = getMoMVal(co, 'unit_price');
+
+    const rows = [
+      { label:'收入', diff: fmtDiff(rv.diff, '亿'), pct: fmtMom(rv.pct) },
+      { label:'业务量', diff: fmtDiff(vl.diff, '亿票'), pct: fmtMom(vl.pct) },
+      { label:'单票', diff: fmtDiff(up.diff, '元'), pct: fmtMom(up.pct) },
+    ];
+
+    grid.innerHTML += `
+      <div class="mom-card" data-co="${co}">
+        <div class="mom-co">${co}</div>
+        <div class="mom-metrics">
+          ${rows.map(r => `
+            <div class="mom-row">
+              <span class="mom-label">${r.label}</span>
+              <span style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--text3)">${r.diff}</span>
+                <span class="mom-val ${r.pct.cls}">${r.pct.txt}</span>
+              </span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  });
+}
+
+function renderRankChart() {
+  const latestMonth = ALL_MONTHS[ALL_MONTHS.length - 1];
+  document.getElementById('sumLatestMonth').textContent = latestMonth;
+
+  if (!rankEC) rankEC = echarts.init(document.getElementById('rankChart'));
+
+  const metrics3 = [
+    {key:'revenue',    label:'收入（亿元）', unit:'亿元'},
+    {key:'volume',     label:'业务量（亿票）',unit:'亿票'},
+    {key:'unit_price', label:'单票（元）',   unit:'元'},
+  ];
+
+  const series = metrics3.map((m, mi) => {
+    const vals = ALL_COS.map(co => {
+      const d = RAW[co].find(r => r.month === latestMonth);
+      return d ? d[m.key] : 0;
+    });
+    const sorted = ALL_COS.map((co,i) => ({co, val: vals[i]})).sort((a,b)=>b.val-a.val);
+    return {
+      name: m.label,
+      type: 'bar',
+      xAxisIndex: mi,
+      yAxisIndex: mi,
+      data: sorted.map(s => ({
+        value: s.val,
+        name: s.co,
+        itemStyle: { color: CO_COLOR[s.co], borderRadius:[0,4,4,0], opacity:0.88 }
+      })),
+      label:{show:true, position:'right', formatter: p => p.value.toFixed(2), fontSize:11, color:'var(--text2)', fontFamily:'Inter,sans-serif'},
+      barMaxWidth: 22,
+    };
+  });
+
+  // build sorted y-axis categories per metric
+  const sortedCos = metrics3.map(m => {
+    return ALL_COS.map(co => {
+      const d = RAW[co].find(r => r.month === latestMonth);
+      return {co, val: d?d[m.key]:0};
+    }).sort((a,b)=>a.val-b.val).map(s=>s.co);
+  });
+
+  rankEC.setOption({
+    backgroundColor:'transparent',
+    animation: true,
+    animationDuration: 600,
+    legend:{ show:false },
+    grid: metrics3.map((m,i) => ({
+      top: i===0 ? 16 : (i===1 ? 116 : 216),
+      height: 76,
+      left: 70, right: 60
+    })),
+    tooltip:{
+      trigger:'axis', axisPointer:{type:'shadow'},
+      backgroundColor:'#fff', borderColor:'#e8e8e4', borderWidth:1,
+      padding:[8,12], extraCssText:'border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.08);',
+      textStyle:{fontSize:12, color:'#1a1a18', fontFamily:'Noto Sans SC,sans-serif'},
+      formatter: params => {
+        const p = params[0];
+        if (!p) return '';
+        return `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color};margin-right:6px"></span>
+          <span style="color:#5a5a54">${p.name}</span>
+          <span style="font-weight:600;margin-left:8px">${p.value}</span>`;
+      }
+    },
+    xAxis: metrics3.map((m,i) => ({
+      type:'value', gridIndex:i,
+      axisLabel:{ show: i===2, color:'#9a9a92', fontSize:10, fontFamily:'Inter,sans-serif' },
+      axisLine:{show:false}, axisTick:{show:false},
+      splitLine:{lineStyle:{color:'#f0f0ec'}},
+    })),
+    yAxis: metrics3.map((m,i) => ({
+      type:'category', gridIndex:i,
+      data: sortedCos[i],
+      axisLine:{show:false}, axisTick:{show:false},
+      axisLabel:{
+        color:'#5a5a54', fontSize:11, fontFamily:'Noto Sans SC,sans-serif',
+        formatter: v => v,
+      },
+      name: m.label,
+      nameTextStyle:{color:'#9a9a92', fontSize:10, padding:[0,0,2,0]},
+      nameLocation:'end',
+    })),
+    series: metrics3.map((m,i) => ({
+      name: m.label, type:'bar',
+      xAxisIndex:i, yAxisIndex:i,
+      data: sortedCos[i].map(co => {
+        const d = RAW[co].find(r=>r.month===latestMonth);
+        return {value: d?d[m.key]:0, itemStyle:{color:CO_COLOR[co], borderRadius:[0,4,4,0], opacity:0.88}};
+      }),
+      label:{show:true, position:'right', formatter:p=>p.value.toFixed(2), fontSize:10, color:'#5a5a54', fontFamily:'Inter,sans-serif'},
+      barMaxWidth:20,
+    })),
+  }, true);
+}
+
+function heatColor(val, min, max) {
+  if (val == null) return '#f5f5f3';
+  if (val < 0) {
+    // 负增长：浅红
+    const t = Math.min(Math.abs(val) / 30, 1);
+    const r = Math.round(255 - t * 40);
+    const g = Math.round(255 - t * 80);
+    const b = Math.round(255 - t * 80);
+    return `rgb(${r},${g},${b})`;
+  }
+  // 正增长：浅→深绿
+  const t = Math.min(val / 50, 1);
+  const r = Math.round(255 - t * 160);
+  const g = Math.round(255 - t * 60);
+  const b = Math.round(255 - t * 140);
+  return `rgb(${r},${g},${b})`;
+}
+function heatTextColor(val) {
+  if (val == null) return '#9a9a92';
+  if (Math.abs(val) > 25) return '#fff';
+  return val < 0 ? '#b83232' : '#1a7a4a';
+}
+
+function renderHeatTable() {
+  const tbl = document.getElementById('heatTable');
+  const months = ALL_MONTHS;
+
+  let html = '<thead><tr><th>公司 \\ 月份</th>';
+  months.forEach(m => { html += `<th>${m.slice(0,7)}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  ALL_COS.forEach(co => {
+    html += `<tr><td><span class="co-dot" style="background:${CO_COLOR[co]}"></span>${co}</td>`;
+    months.forEach(month => {
+      const d = RAW[co].find(r => r.month === month);
+      const val = d ? d[hmMetric] : null;
+      const bg = heatColor(val, -30, 70);
+      const tc = heatTextColor(val);
+      const txt = val != null ? (val>0?'+':'') + val.toFixed(1)+'%' : '—';
+      html += `<td><span class="heat-cell" style="background:${bg};color:${tc}">${txt}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+function renderSumTable() {
+  const tbl = document.getElementById('sumTable');
+  const months = ALL_MONTHS; // all 14 months
+
+  // compute stats per company
+  const stats = ALL_COS.map(co => {
+    const data = RAW[co];
+    const revenues = data.map(d=>d.revenue).filter(v=>v!=null);
+    const volumes  = data.map(d=>d.volume).filter(v=>v!=null);
+    const ups      = data.map(d=>d.unit_price).filter(v=>v!=null);
+    const ryoys    = data.map(d=>d.revenue_yoy).filter(v=>v!=null);
+    const vyoys    = data.map(d=>d.volume_yoy).filter(v=>v!=null);
+    const uyoys    = data.map(d=>d.unit_price_yoy).filter(v=>v!=null);
+    const sum = a => a.reduce((s,v)=>s+v,0);
+    const avg = a => a.length ? sum(a)/a.length : null;
+    const max = a => a.length ? Math.max(...a) : null;
+    const min = a => a.length ? Math.min(...a) : null;
+    const maxMonth = (field) => {
+      let best = null, bestM = '';
+      data.forEach(d => { if (best===null||d[field]>best){best=d[field];bestM=d.month;} });
+      return bestM;
+    };
+    return {
+      co,
+      totalRevenue: sum(revenues),
+      avgRevenue: avg(revenues),
+      maxRevenue: max(revenues), maxRevenueMonth: maxMonth('revenue'),
+      avgVolume: avg(volumes),
+      totalVolume: sum(volumes),
+      avgUnitPrice: avg(ups),
+      avgRevenueYoy: avg(ryoys),
+      avgVolumeYoy: avg(vyoys),
+      avgUnitPriceYoy: avg(uyoys),
+    };
+  });
+
+  const badge = (v) => {
+    if (v == null) return '<span style="color:#ccc">—</span>';
+    const cls = v>=0?'pos':'neg';
+    return `<span class="tbl-badge ${cls}">${v>0?'+':''}${v.toFixed(1)}%</span>`;
+  };
+
+  let html = `<thead><tr>
+    <th>公司</th>
+    <th>累计收入（亿元）</th>
+    <th>月均收入（亿元）</th>
+    <th>最高收入月份</th>
+    <th>月均业务量（亿票）</th>
+    <th>月均单票（元）</th>
+    <th>收入同比均值</th>
+    <th>业务量同比均值</th>
+    <th>单票同比均值</th>
+  </tr></thead><tbody>`;
+
+  stats.forEach(s => {
+    html += `<tr>
+      <td><div class="sum-co-name"><span class="co-dot" style="background:${CO_COLOR[s.co]}"></span>${s.co}</div></td>
+      <td><strong>${s.totalRevenue.toFixed(1)}</strong></td>
+      <td>${s.avgRevenue.toFixed(2)}</td>
+      <td><span style="font-size:11px;color:var(--text2)">${s.maxRevenueMonth}</span> <strong>${s.maxRevenue.toFixed(2)}</strong></td>
+      <td>${s.avgVolume.toFixed(2)}</td>
+      <td>${s.avgUnitPrice.toFixed(2)}</td>
+      <td>${badge(s.avgRevenueYoy)}</td>
+      <td>${badge(s.avgVolumeYoy)}</td>
+      <td>${badge(s.avgUnitPriceYoy)}</td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+function renderSummary() {
+  renderRankChart();
+  renderMomGrid();
+  renderHeatTable();
+  renderSumTable();
+}
+
+// 热力表指标切换
+document.querySelectorAll('.hm-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.hm-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    hmMetric = btn.dataset.hm;
+    renderHeatTable();
+  });
+});
+
+renderAll();
+</script>
+</body>
+</html>
