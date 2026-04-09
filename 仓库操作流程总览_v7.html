@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仓库操作管理系统 - 流程指示页面</title>
+    <link rel="stylesheet" href="https://static0.xesimg.com/alading-resources/css/tailwind.min.css">
+    <link rel="stylesheet" href="https://static0.xesimg.com/alading-resources/css/all.min.css">
+    <link rel="stylesheet" href="https://static0.xesimg.com/alading-resources/css/css2.css?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap">
+    <script src="https://static0.xesimg.com/alading-resources/js/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Tahoma,Arial,Roboto,"Droid Sans","Helvetica Neue","Droid Sans Fallback","Heiti SC","Hiragino Sans GB",Simsun,sans-self;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-gradient {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        .process-card {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .flow-indicator {
+            position: relative;
+        }
+        
+        .flow-indicator::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid #4f46e5;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .section-divider {
+            background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+            height: 1px;
+            margin: 3rem 0;
+        }
+        
+        .nav-btn {
+            background: white;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .nav-btn:hover {
+            background: #f9fafb;
+            color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        
+        .nav-btn.active {
+            background: #4f46e5;
+            color: white;
+            border-color: #4f46e5;
+        }
+        
+        .content-section {
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .content-section.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-warehouse text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-xl font-bold text-white">仓库操作管理系统</h1>
+                        <p class="text-blue-100 text-sm">流程指示与操作指南</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-white text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                        <i class="fas fa-clock mr-1"></i>
+                        实时监控
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面标题 -->
+    <div class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">仓库操作流程总览</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    完整的仓库管理流程体系，涵盖C端与B端的正向、逆向操作以及库内维修流程，确保高效、准确的仓储作业。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 流程导航菜单 -->
+    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 sticky top-16 z-40 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex overflow-x-auto py-4 space-x-2">
+                <button onclick="showSection('overview')" class="nav-btn active whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-sitemap mr-2"></i>流程概览
+                </button>
+                <button onclick="showSection('c-forward')" class="nav-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-user mr-2"></i>C端正向流程
+                </button>
+                <button onclick="showSection('c-reverse')" class="nav-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-undo mr-2"></i>C端逆向流程
+                </button>
+                <button onclick="showSection('b-forward')" class="nav-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-building mr-2"></i>B端正向流程
+                </button>
+                <button onclick="showSection('b-reverse')" class="nav-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-exchange-alt mr-2"></i>B端逆向流程
+                </button>
+                <button onclick="showSection('repair')" class="nav-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-tools mr-2"></i>库内维修流程
+                </button>
+                <button onclick="showSection('statistics')" class="nav-btn whitespace-nowrap px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 flex items-center">
+                    <i class="fas fa-chart-bar mr-2"></i>流程统计
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 内容区域 -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- 流程概览图 -->
+        <div id="overview" class="content-section">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+                    <i class="fas fa-sitemap text-indigo-600 mr-2"></i>
+                    流程架构图
+                </h3>
+                <div class="mermaid text-center">
+                    graph TD
+                        A[仓库操作管理系统] --> B[C端操作流程]
+                        A --> C[B端操作流程]
+                        A --> D[库内维修流程]
+                        
+                        B --> E[C端正向流程]
+                        B --> F[C端逆向流程]
+                        
+                        C --> G[B端正向流程]
+                        C --> H[B端逆向流程]
+                        
+                        E --> E1[创建单据]
+                        E --> E2[精准分拣]
+                        E --> E3[打包复核]
+                        E --> E4[扫描称重]
+                        E --> E5[快递揽收]
+                        
+                        F --> F1[退件验收]
+                        F --> F2[拆检质检]
+                        F --> F3[货品上架]
+                        
+                        G --> G1[创建批销单]
+                        G --> G2[仓库备货]
+                        G --> G3[打包复核]
+                        G --> G4[快递揽收]
+                        
+                        H --> H1[退件验收]
+                        H --> H2[拆检质检]
+                        H --> H3[货品上架]
+                        
+                        D --> D1[维修分拣]
+                        D --> D2[塑封统计]
+                        D --> D3[系统入库]
+                        
+                        classDef processNode fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+                        classDef stepNode fill:#f3e5f5,stroke:#4a148c,stroke-width:1px
+                        
+                        class A,B,C,D processNode
+                        class E,F,G,H,E1,E2,E3,E4,E5,F1,F2,F3,G1,G2,G3,G4,H1,H2,H3,D1,D2,D3 stepNode
+                </div>
+            </div>
+        </div>
+
+        <!-- C端正向操作流程 -->
+        <div id="c-forward" class="content-section hidden">
+            <div class="process-card rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-blue-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">C端正向操作及打包流程</h3>
+                        <p class="text-gray-600">面向消费者的标准出库流程</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- 步骤1 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">1</span>
+                            <h4 class="text-xl font-semibold text-gray-900">创建单据</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/单据创建与拣货单打印.png" alt="单据创建" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">创建单据并根据系统信息打印相对应的拣货单</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/d352cc847b6149deaf7bc66062c240c2" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/d352cc847b6149deaf7bc66062c240c2" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">2</span>
+                            <h4 class="text-xl font-semibold text-gray-900">精准分拣</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/按照拣货单精准分拣.png" alt="精准分拣" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">仓库按拣货单精准分拣</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/93a4d15f27ec40d09eb6e4ef05cb9e34" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/93a4d15f27ec40d09eb6e4ef05cb9e34" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">3</span>
+                            <h4 class="text-xl font-semibold text-gray-900">打包复核</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/复核打包.png" alt="打包复核" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">根据拣货单进行打包并复核</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/668e71bcaeff4261827c954d84179d90" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/668e71bcaeff4261827c954d84179d90" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">4</span>
+                            <h4 class="text-xl font-semibold text-gray-900">扫描称重</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/流水线扫描称重.png" alt="扫描称重" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">复核后的包裹放进流水线进行扫描称重</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/e99ff40126c64ee998df4d4bff2e7ead" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/e99ff40126c64ee998df4d4bff2e7ead" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤5 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-blue-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">5</span>
+                            <h4 class="text-xl font-semibold text-gray-900">快递揽收</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/快递揽收.png" alt="快递揽收" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">扫描完成后交由快递进行揽收</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/f61b917148834b73a744476d5a6e096b" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/24/f61b917148834b73a744476d5a6e096b" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- C端逆向操作流程 -->
+        <div id="c-reverse" class="content-section hidden">
+            <div class="process-card rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-undo text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">C端逆向操作及打包流程</h3>
+                        <p class="text-gray-600">消费者退货处理流程</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- 步骤1 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">1</span>
+                            <h4 class="text-xl font-semibold text-gray-900">退件验收</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/退件验收并记录.png" alt="退件验收" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">快递退回后，仓库与快递方共同核对退回货品信息，确认无误后登记备案</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/a5ab5f292ebb4b108153fc5ab1b531ab" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/a5ab5f292ebb4b108153fc5ab1b531ab" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">2</span>
+                            <h4 class="text-xl font-semibold text-gray-900">拆检质检</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/退件拆检与质检.png" alt="拆检质检" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">对已扫描复核的退回包装进行拆解，核对货品完整性，执行质量检查</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/ecf5af2c3e5e4a17b82d15cb97cf21ea" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/ecf5af2c3e5e4a17b82d15cb97cf21ea" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">3</span>
+                            <h4 class="text-xl font-semibold text-gray-900">货品上架</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/货品上架.png" alt="货品上架" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">对检验合格的货品进行系统登记并上架至指定储位</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/8c26ec7ecfcb4dddb2c5642ed326d2a4" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/8c26ec7ecfcb4dddb2c5642ed326d2a4" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B端正向操作流程 -->
+        <div id="b-forward" class="content-section hidden">
+            <div class="process-card rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-green-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-building text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">B端正向操作及打包流程</h3>
+                        <p class="text-gray-600">面向企业客户的批量出库流程</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- 步骤1 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">1</span>
+                            <h4 class="text-xl font-semibold text-gray-900">创建批销单</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/单据创建并打印批销单.png" alt="创建批销单" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">创建单据并根据系统信息打印相对应的批销单</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/0d37c2ae54ee478f92771127aff8dc83" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/0d37c2ae54ee478f92771127aff8dc83" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">2</span>
+                            <h4 class="text-xl font-semibold text-gray-900">仓库备货</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/备货阶段.png" alt="仓库备货" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">仓库按批销单进行备货</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/4f0d32c225bd4ca1bd755f296e66e78d" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/4f0d32c225bd4ca1bd755f296e66e78d" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">3</span>
+                            <h4 class="text-xl font-semibold text-gray-900">打包复核</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/打包复核.png" alt="打包复核" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">将备好的货品进行打包并复核</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/ad6b90ccb601497eabc56b7be9330416" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/ad6b90ccb601497eabc56b7be9330416" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-green-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">4</span>
+                            <h4 class="text-xl font-semibold text-gray-900">快递揽收</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/退件验收并记录1.png" alt="快递揽收" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">复核完成后交由快递进行揽收</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/fbd0f709203a49f99c1993c802f69787" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/fbd0f709203a49f99c1993c802f69787" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B端逆向操作流程 -->
+        <div id="b-reverse" class="content-section hidden">
+            <div class="process-card rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-orange-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-exchange-alt text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">B端逆向操作及打包流程</h3>
+                        <p class="text-gray-600">企业客户退货处理流程</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- 步骤1 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">1</span>
+                            <h4 class="text-xl font-semibold text-gray-900">退件验收</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/退件拆检与质检1.png" alt="退件验收" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">快递退回后，仓库与快递方共同核对退回货品信息，确认无误后登记备案</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/b2316b029426441fafddbbdd47e8b4e6" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/b2316b029426441fafddbbdd47e8b4e6" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">2</span>
+                            <h4 class="text-xl font-semibold text-gray-900">拆检质检</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/货品上架1.png" alt="拆检质检" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">对已扫描复核的退回包装进行拆解，核对货品完整性，执行质量检查</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/2285fe544eaf430296ae770ebed1e921" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/2285fe544eaf430296ae770ebed1e921" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">3</span>
+                            <h4 class="text-xl font-semibold text-gray-900">货品上架</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/维修货品分拣与筛选.png" alt="货品上架" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">对检验合格的货品进行系统登记并上架至指定储位</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/8c26ec7ecfcb4dddb2c5642ed326d2a4" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/8c26ec7ecfcb4dddb2c5642ed326d2a4" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 库内维修操作流程 -->
+        <div id="repair" class="content-section hidden">
+            <div class="process-card rounded-xl shadow-lg p-8 mb-8">
+                <div class="flex items-center mb-6">
+                    <div class="bg-purple-500 text-white rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-tools text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">库内维修操作及打包流程</h3>
+                        <p class="text-gray-600">货品维修与重新入库流程</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-8">
+                    <!-- 步骤1 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-purple-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">1</span>
+                            <h4 class="text-xl font-semibold text-gray-900">维修分拣</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/可维修货品塑封与统计.png" alt="维修分拣" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">对维修货品进行分类整理，并筛选出可修复的货品进行后续处理</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/10150c8ea4b145e28e8cc31b424e836e" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/10150c8ea4b145e28e8cc31b424e836e" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-purple-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">2</span>
+                            <h4 class="text-xl font-semibold text-gray-900">塑封统计</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/系统建单入库.png" alt="塑封统计" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">对筛选出的可维修货品进行塑封包装，并统计数量</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/0817877ed8824c0a8b1d420f00b79237" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/0817877ed8824c0a8b1d420f00b79237" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3 -->
+                    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+                        <div class="flex items-center mb-6">
+                            <span class="bg-purple-500 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg font-bold mr-4">3</span>
+                            <h4 class="text-xl font-semibold text-gray-900">系统入库</h4>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <img src="https://static0-test.xesimg.com/alading-img/cangchu/快递揽收.png" alt="系统入库" class="w-full h-auto object-contain rounded-md mb-4 max-h-96">
+                                <p class="text-gray-600">在系统中创建单据并完成货品入库操作</p>
+                            </div>
+                            <div class="video-container">
+                                <video controls preload="metadata" class="rounded-lg">
+                                    <source src="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/d75adfb2a35d450c8c934683119fc120" type="video/mp4">
+                                    <p class="text-gray-600">您的浏览器不支持视频播放。<a href="https://yach-vika.zhiyinlou.com/assets/space/2025/11/25/d75adfb2a35d450c8c934683119fc120" class="text-blue-600">点击下载视频</a></p>
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计总览 -->
+        <div id="statistics" class="content-section hidden">
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+                    <i class="fas fa-chart-bar text-indigo-600 mr-2"></i>
+                    流程统计总览
+                </h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <div class="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                        <div class="text-3xl font-bold text-blue-600 mb-2">5</div>
+                        <div class="text-sm text-gray-600">C端正向步骤</div>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-lg">
+                        <div class="text-3xl font-bold text-red-600 mb-2">3</div>
+                        <div class="text-sm text-gray-600">C端逆向步骤</div>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                        <div class="text-3xl font-bold text-green-600 mb-2">4</div>
+                        <div class="text-sm text-gray-600">B端正向步骤</div>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
+                        <div class="text-3xl font-bold text-orange-600 mb-2">3</div>
+                        <div class="text-sm text-gray-600">B端逆向步骤</div>
+                    </div>
+                    <div class="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                        <div class="text-3xl font-bold text-purple-600 mb-2">3</div>
+                        <div class="text-sm text-gray-600">维修流程步骤</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="gradient-bg text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">系统功能</h4>
+                    <ul class="space-y-2 text-blue-100">
+                        <li><i class="fas fa-check mr-2"></i>智能订单管理</li>
+                        <li><i class="fas fa-check mr-2"></i>精准库存控制</li>
+                        <li><i class="fas fa-check mr-2"></i>全程质量追踪</li>
+                        <li><i class="fas fa-check mr-2"></i>实时流程监控</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">操作规范</h4>
+                    <ul class="space-y-2 text-blue-100">
+                        <li><i class="fas fa-shield-alt mr-2"></i>标准化作业流程</li>
+                        <li><i class="fas fa-shield-alt mr-2"></i>质量安全保障</li>
+                        <li><i class="fas fa-shield-alt mr-2"></i>数据准确可靠</li>
+                        <li><i class="fas fa-shield-alt mr-2"></i>效率持续优化</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">技术支持</h4>
+                    <ul class="space-y-2 text-blue-100">
+                        <li><i class="fas fa-headset mr-2"></i>7×24小时服务</li>
+                        <li><i class="fas fa-headset mr-2"></i>专业技术支持</li>
+                        <li><i class="fas fa-headset mr-2"></i>系统培训指导</li>
+                        <li><i class="fas fa-headset mr-2"></i>问题快速响应</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-blue-400 border-opacity-30 mt-8 pt-8 text-center">
+                <p class="text-blue-100">
+                    &copy; 2024 仓库操作管理系统. 保留所有权利. | 
+                    <i class="fas fa-code mr-1"></i>专业仓储解决方案
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 初始化Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#4f46e5',
+                primaryTextColor: '#1f2937',
+                primaryBorderColor: '#e5e7eb',
+                lineColor: '#6b7280',
+                secondaryColor: '#f3f4f6',
+                tertiaryColor: '#fef3c7'
+            }
+        });
+
+        // 内容切换功能
+        function showSection(sectionId) {
+            // 隐藏所有内容区域
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // 显示选中的内容区域
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+            }
+            
+            // 更新导航按钮状态
+            const navButtons = document.querySelectorAll('.nav-btn');
+            navButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 激活当前按钮
+            const activeBtn = event.target.closest('.nav-btn');
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            
+            // 滚动到内容顶部
+            document.querySelector('.max-w-7xl').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        // 添加滚动效果
+        window.addEventListener('scroll', function() {
+            const elements = document.querySelectorAll('.card-hover');
+            const windowHeight = window.innerHeight;
+            
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                
+                if (elementTop < windowHeight * 0.8) {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                } else {
+                    element.style.opacity = '0.7';
+                    element.style.transform = 'translateY(20px)';
+                }
+            });
+        });
+
+        // 视频播放优化
+        document.addEventListener('DOMContentLoaded', function() {
+            const videos = document.querySelectorAll('video');
+            
+            videos.forEach(video => {
+                video.addEventListener('loadstart', function() {
+                    this.style.opacity = '0.8';
+                });
+                
+                video.addEventListener('canplay', function() {
+                    this.style.opacity = '1';
+                });
+                
+                video.addEventListener('error', function() {
+                    const container = this.closest('.video-container');
+                    if (container) {
+                        container.innerHTML = '<div class="flex items-center justify-center h-full bg-gray-100 text-gray-500"><i class="fas fa-video-slash mr-2"></i>视频暂时无法加载</div>';
+                    }
+                });
+            });
+        });
+
+        // 添加平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

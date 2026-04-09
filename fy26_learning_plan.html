@@ -599,12 +599,16 @@ var D_FY26=[
    title:'仓库作业大揭秘',
    desc:'联动日常作业老师，进行实地参观+深度沟通，配合6月仓库作业参观宣传里程碑节点。',
    status:'done',pct:100,tags:['2025.6','仓库参观节点'],
-   bars:[{c:'g',s:2,e:3}],docs:[],videos:[]},
+   bars:[{c:'g',s:2,e:3}],
+   docs:[{name:'仓库操作流程总览',type:'html',date:'',url:'仓库操作流程总览_v7.html'}],
+   videos:[]},
   {id:'p4',cat:'实践及方法论',cc:'g',icon:'🎬',
    title:'高效仓库从规范开始',
    desc:'超全仓库作业流程图解和视频制作，实时持续更新，打造组内知识沉淀库。',
    status:'done',pct:100,tags:['实时持续更新'],
-   bars:[{c:'g',s:1,e:11}],docs:[],videos:[]},
+   bars:[{c:'g',s:1,e:11}],
+   docs:[{name:'仓库操作流程总览',type:'html',date:'',url:'仓库操作流程总览_v7.html'}],
+   videos:[]},
   {id:'p5',cat:'实践及方法论',cc:'g',icon:'📈',
    title:'关键业务指标 & 数据看板',
    desc:'设计核心业务指标体系，搭建数据可视化看板，实时监控与追踪，配合9月数据指标回顾。',
@@ -642,7 +646,7 @@ var YR_META={
   FY26:{range:'2025年3月 – 2026年2月',total:9,done:7,ongoing:2,rate:88},
   FY27:{range:'2026年3月 – 2027年2月',total:4,done:0,ongoing:3,rate:15}
 };
-var DICO={pdf:'📕',ppt:'📙',word:'📘',excel:'📗',other:'📄'};
+var DICO={pdf:'📕',ppt:'📙',word:'📘',excel:'📗',html:'🌐',other:'📄'};
 var SLB={done:'已完成',ongoing:'进行中',pending:'待开始'};
 
 function switchYear(yr){
@@ -798,7 +802,7 @@ var BASE_URL='https://xue11-sir.github.io/-/';
 function openDoc(doc){
   var full=BASE_URL+doc.url;
   var ext=doc.url.split('.').pop().toLowerCase();
-  var src=ext==='pdf'?full:'https://view.officeapps.live.com/op/view.aspx?src='+encodeURIComponent(full);
+  var src=(ext==='pdf'||ext==='html'||ext==='htm')?full:'https://view.officeapps.live.com/op/view.aspx?src='+encodeURIComponent(full);
   document.getElementById('preview-name').textContent=doc.name;
   document.getElementById('preview-dl').href=doc.url;
   document.getElementById('preview-dl').setAttribute('download',doc.name);
