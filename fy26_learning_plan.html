@@ -740,7 +740,6 @@ function buildCards(){
       +'<div class="card-desc">'+item.desc+'</div>'
       +'<div class="card-foot">'
       +'<div class="tags">'+th+'</div>'
-      +(item.status!=='done'?'<div>'+ring(item.pct,item.cc)+'</div>':'')
       +'</div>';
     d.onclick=function(){openPanel(item.id);};
     (item.cat==='学习计划'?gs:gp).appendChild(d);
