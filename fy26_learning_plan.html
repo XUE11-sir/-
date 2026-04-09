@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>仓储管理部 FY26 学习计划</title>
+<style>
+:root{
+  --glass-bg:rgba(255,255,255,0.58);
+  --glass-bg2:rgba(255,255,255,0.7);
+  --glass-border:rgba(200,200,255,0.45);
+  --glass-border2:rgba(200,200,255,0.65);
+  --glass-shine:rgba(255,255,255,0.95);
+  --glass-shadow:rgba(100,80,200,0.15);
+  --purple:#6d28d9; --purple-d:#5b21b6; --purple-glow:rgba(109,40,217,0.2);
+  --green:#047857;  --green-d:#065f46;  --green-glow:rgba(4,120,87,0.2);
+  --blue:#1d4ed8;   --orange:#b45309;   --red:#dc2626;
+  --t1:#1e1b4b;     --t2:rgba(30,27,75,0.7);  --t3:rgba(30,27,75,0.42);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'PingFang SC','Microsoft YaHei','Segoe UI',sans-serif;
+  background:#ede9fe;color:var(--t1);min-height:100vh;overflow-x:hidden;
+}
+
+/* ── Mesh background ── */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;}
+.bg-grad{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 15%, rgba(167,139,250,0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 55% at 90% 85%, rgba(147,197,253,0.5)  0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(110,231,183,0.3)  0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 10%, rgba(249,168,212,0.4)  0%, transparent 55%),
+    linear-gradient(160deg,#f3f0ff 0%,#eff6ff 50%,#fdf4ff 100%);
+}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(70px);animation:float 28s ease-in-out infinite alternate;}
+.bl1{width:580px;height:580px;background:rgba(167,139,250,0.3);top:-180px;left:-120px;}
+.bl2{width:500px;height:500px;background:rgba(147,197,253,0.28);bottom:-150px;right:-80px;animation-delay:-14s;}
+.bl3{width:420px;height:420px;background:rgba(110,231,183,0.22);top:35%;left:40%;animation-delay:-7s;}
+.bl4{width:300px;height:300px;background:rgba(249,168,212,0.28);top:10%;right:18%;animation-delay:-3s;}
+@keyframes float{to{transform:translate(45px,35px) scale(1.1);}}
+
+/* ── glass mixin helpers ── */
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid var(--glass-border);
+  box-shadow:0 8px 32px var(--glass-shadow),inset 0 1px 0 var(--glass-shine);
+}
+.glass2{
+  background:var(--glass-bg2);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:1px solid var(--glass-border2);
+  box-shadow:0 12px 40px var(--glass-shadow),inset 0 1px 0 var(--glass-shine);
+}
+
+.page{position:relative;z-index:1;}
+
+/* ── Hero ── */
+.hero{
+  padding:38px 52px 28px;
+  border-bottom:1px solid var(--glass-border);
+  background:linear-gradient(180deg,rgba(139,92,246,0.1) 0%,transparent 100%);
+}
+.dept-name{
+  font-size:22px;font-weight:900;letter-spacing:2px;
+  color:var(--purple);margin-bottom:6px;
+  display:flex;align-items:center;gap:10px;
+}
+.dept-name .fy-tag{
+  font-size:11px;font-weight:700;letter-spacing:1.5px;
+  background:rgba(109,40,217,0.12);border:1px solid rgba(109,40,217,0.3);
+  color:var(--purple);padding:3px 10px;border-radius:14px;
+  backdrop-filter:blur(8px);
+}
+.dept-name::before{
+  content:'';width:8px;height:24px;border-radius:3px;
+  background:linear-gradient(180deg,#6d28d9,#1d4ed8);flex-shrink:0;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.hero h1{
+  font-size:36px;font-weight:900;letter-spacing:-.5px;line-height:1.15;
+  background:linear-gradient(135deg,#3b0764 0%,#6d28d9 50%,#1d4ed8 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-meta{margin-top:10px;display:flex;gap:20px;font-size:12px;color:var(--t2);}
+.hero-meta span{display:flex;align-items:center;gap:5px;}
+.hero-date{margin-left:auto;text-align:right;font-size:11px;color:var(--t3);}
+.hero-date b{display:block;color:var(--t2);font-size:12px;margin-bottom:2px;}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:22px 52px;}
+.sc{
+  border-radius:18px;padding:20px 22px;position:relative;overflow:hidden;
+  transition:transform .25s,box-shadow .25s;cursor:default;
+}
+.sc:hover{transform:translateY(-4px);}
+.sc::before{/* diagonal shine line */
+  content:'';position:absolute;top:0;left:-60%;width:50%;height:100%;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.06) 50%,transparent 60%);
+  transform:skewX(-15deg);transition:left .6s;
+}
+.sc:hover::before{left:130%;}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sc-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:20px;background:rgba(255,255,255,0.6);}
+.sc-tag{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;}
+.sc.p .sc-tag{background:rgba(167,139,250,0.2);color:var(--purple);}
+.sc.g .sc-tag{background:rgba(52,211,153,0.2);color:var(--green);}
+.sc.o .sc-tag{background:rgba(251,191,36,0.2);color:var(--orange);}
+.sc.b .sc-tag{background:rgba(96,165,250,0.2);color:var(--blue);}
+.sc-num{font-size:34px;font-weight:900;line-height:1;display:flex;align-items:baseline;gap:3px;}
+.sc-num .u{font-size:14px;font-weight:400;color:var(--t2);}
+.sc-lbl{font-size:12px;color:var(--t2);margin-top:5px;}
+
+/* ── Section label ── */
+.sec{padding:4px 52px 14px;display:flex;align-items:center;gap:14px;}
+.sec h3{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;white-space:nowrap;}
+.sec-line{flex:1;height:1px;background:var(--glass-border);}
+
+/* ── Gantt ── */
+.gantt-wrap{padding:0 52px 26px;}
+.gantt{border-radius:18px;overflow:hidden;}
+.g-head{display:grid;grid-template-columns:190px repeat(12,1fr);
+  background:rgba(255,255,255,0.45);border-bottom:1px solid var(--glass-border);}
+.g-head-lbl{padding:11px 16px;font-size:10px;font-weight:700;color:var(--t3);
+  letter-spacing:.8px;text-transform:uppercase;border-right:1px solid var(--glass-border);}
+.g-head-m{padding:11px 2px;font-size:11px;font-weight:500;color:var(--t2);
+  text-align:center;border-right:1px solid rgba(0,0,0,.04);}
+.g-ms-row{display:grid;grid-template-columns:190px repeat(12,1fr);
+  border-bottom:1px solid var(--glass-border);background:rgba(180,130,0,.05);}
+.g-ms-lbl{padding:6px 16px;font-size:10px;font-weight:700;color:var(--orange);
+  border-right:1px solid var(--glass-border);display:flex;align-items:center;gap:5px;}
+.g-ms-cell{position:relative;border-right:1px solid rgba(0,0,0,.03);
+  display:flex;align-items:center;justify-content:center;min-height:28px;}
+.ms-pin{
+  font-size:10px;font-weight:600;color:var(--orange);
+  background:rgba(251,191,36,.12);
+  border:1px solid rgba(251,191,36,.3);
+  padding:2px 7px;border-radius:6px;white-space:nowrap;
+  text-shadow:0 0 10px rgba(251,191,36,.5);
+}
+.g-row{display:grid;grid-template-columns:190px repeat(12,1fr);
+  border-bottom:1px solid rgba(0,0,0,.05);
+  transition:background .2s;cursor:pointer;}
+.g-row:last-child{border-bottom:none;}
+.g-row:hover{background:rgba(109,40,217,.05);}
+.g-lbl{padding:9px 14px;font-size:12px;font-weight:500;color:var(--t1);
+  border-right:1px solid var(--glass-border);
+  display:flex;align-items:center;gap:7px;overflow:hidden;}
+.g-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.g-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.g-cell{border-right:1px solid rgba(0,0,0,.04);padding:5px 1px;display:flex;align-items:center;}
+.g-bar{
+  height:22px;width:100%;border-radius:4px;position:relative;overflow:hidden;
+}
+.g-bar::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.2) 0%,transparent 50%);}
+.g-bar.p{background:linear-gradient(90deg,rgba(109,40,217,.85),rgba(139,92,246,.85));}
+.g-bar.g{background:linear-gradient(90deg,rgba(5,150,105,.85),rgba(52,211,153,.85));}
+.g-bar.b{background:linear-gradient(90deg,rgba(29,78,216,.85),rgba(96,165,250,.85));}
+.g-bar.dash{
+  background:repeating-linear-gradient(90deg,
+    rgba(139,92,246,.5) 0,rgba(139,92,246,.5) 6px,transparent 6px,transparent 12px);
+}
+.g-bar.rs{border-radius:4px 0 0 4px;} .g-bar.re{border-radius:0 4px 4px 0;} .g-bar.rm{border-radius:0;}
+
+/* ── Cards ── */
+.cards-wrap{padding:0 52px 50px;display:flex;flex-direction:column;gap:28px;}
+.cat-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.cat-stripe{width:3px;height:20px;border-radius:2px;}
+.cat-stripe.p{background:linear-gradient(180deg,var(--purple),var(--blue));}
+.cat-stripe.g{background:linear-gradient(180deg,var(--green),var(--blue));}
+.cat-name{font-size:16px;font-weight:800;color:var(--t1);}
+.cat-cnt{font-size:11px;color:var(--t3);
+  background:rgba(255,255,255,.55);border:1px solid var(--glass-border);
+  padding:2px 9px;border-radius:10px;backdrop-filter:blur(8px);}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;}
+.card{
+  border-radius:18px;padding:20px 22px;cursor:pointer;
+  transition:all .28s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;
+}
+/* glass shine on hover swipe */
+.card::after{
+  content:'';position:absolute;top:0;left:-80%;width:60%;height:100%;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.07) 50%,transparent 70%);
+  transform:skewX(-15deg);transition:left .65s;pointer-events:none;
+}
+.card:hover::after{left:140%;}
+.card:hover{transform:translateY(-5px);}
+.card-p:hover{box-shadow:0 16px 48px var(--purple-glow),inset 0 1px 0 var(--glass-shine);}
+.card-g:hover{box-shadow:0 16px 48px var(--green-glow),inset 0 1px 0 var(--glass-shine);}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.card-ico{width:42px;height:42px;border-radius:12px;font-size:22px;
+  display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.65);}
+.sbadge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;
+  display:flex;align-items:center;gap:4px;backdrop-filter:blur(6px);}
+.sbadge.done   {background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.25);}
+.sbadge.ongoing{background:rgba(251,191,36,.15);color:var(--orange);border:1px solid rgba(251,191,36,.25);}
+.sbadge.pending{background:rgba(29,78,216,.12);color:var(--blue);border:1px solid rgba(29,78,216,.22);}
+.sbadge::before{content:'';width:5px;height:5px;border-radius:50%;}
+.sbadge.done::before   {background:var(--green);}
+.sbadge.ongoing::before{background:var(--orange);animation:blink 2s infinite;}
+.sbadge.pending::before{background:var(--blue);}
+
+/* ── Year switcher ── */
+.yr-switch{
+  display:inline-flex;gap:0;margin-top:14px;
+  background:rgba(255,255,255,0.45);border:1px solid var(--glass-border);
+  border-radius:14px;padding:3px;backdrop-filter:blur(10px);
+}
+.yr-btn{
+  padding:6px 20px;border-radius:10px;font-size:12px;font-weight:700;
+  color:var(--t3);cursor:pointer;transition:all .22s;letter-spacing:.5px;
+  user-select:none;
+}
+.yr-btn.on{background:var(--purple);color:#fff;box-shadow:0 2px 12px rgba(109,40,217,0.28);}
+.card-title{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:6px;line-height:1.4;}
+.card-desc{font-size:12px;color:var(--t2);line-height:1.75;}
+.card-foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--glass-border);
+  display:flex;align-items:center;justify-content:space-between;}
+.tags{display:flex;gap:5px;flex-wrap:wrap;}
+.tag{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:500;backdrop-filter:blur(6px);}
+.tag.tp{background:rgba(29,78,216,.1);color:#1d4ed8;border:1px solid rgba(29,78,216,.2);}
+.tag.tf{background:rgba(109,40,217,.1);color:#6d28d9;border:1px solid rgba(109,40,217,.2);}
+.tag.to{background:rgba(180,83,9,.1);color:#b45309;border:1px solid rgba(180,83,9,.2);}
+.tag.tm{background:rgba(180,83,9,.1);color:#b45309;border:1px solid rgba(180,83,9,.2);}
+
+/* SVG ring */
+.ring{transform:rotate(-90deg);}
+.rb{fill:none;stroke:rgba(0,0,0,.1);stroke-width:3.5;}
+.rf{fill:none;stroke-width:3.5;stroke-linecap:round;transition:stroke-dashoffset 1.3s ease;}
+.rf.p{stroke:url(#gp);}  .rf.g{stroke:url(#gg);}
+.rt{font-size:9.5px;font-weight:800;fill:var(--t2);dominant-baseline:middle;text-anchor:middle;}
+
+/* ── Side panel ── */
+.overlay{
+  visibility:hidden;opacity:0;
+  transition:opacity .3s,visibility .3s;
+  position:fixed;inset:0;
+  background:rgba(50,30,120,.25);backdrop-filter:blur(8px);
+  z-index:300;
+}
+.overlay.on{visibility:visible;opacity:1;}
+.panel{
+  position:absolute;top:0;right:0;bottom:0;width:500px;
+  background:linear-gradient(160deg,rgba(237,233,254,.85) 0%,rgba(255,255,255,.92) 100%);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-left:1px solid var(--glass-border2);
+  box-shadow:-20px 0 60px rgba(100,80,200,.15),inset 1px 0 0 rgba(255,255,255,.9);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .38s cubic-bezier(.4,0,.2,1);
+}
+.overlay.on .panel{transform:translateX(0);}
+
+/* panel header glass strip */
+.ph{
+  padding:28px 28px 20px;border-bottom:1px solid var(--glass-border);
+  flex-shrink:0;position:relative;
+  background:linear-gradient(135deg,rgba(139,92,246,.08) 0%,transparent 60%);
+}
+.ph::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);}
+.ph-cat{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
+.ph-cat.p{color:var(--purple);}  .ph-cat.g{color:var(--green);}
+.ph h2{font-size:19px;font-weight:800;color:var(--t1);line-height:1.3;margin-bottom:8px;}
+.ph-desc{font-size:12px;color:var(--t2);line-height:1.75;}
+.ph-close{
+  position:absolute;top:20px;right:20px;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.7);border:1px solid var(--glass-border);
+  color:var(--t2);cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.ph-close:hover{background:rgba(255,255,255,.9);color:var(--t1);}
+
+.pp{padding:14px 28px;border-bottom:1px solid var(--glass-border);flex-shrink:0;}
+.pp-top{display:flex;justify-content:space-between;font-size:11px;color:var(--t3);margin-bottom:7px;}
+.pp-bar{height:4px;background:rgba(0,0,0,.08);border-radius:2px;}
+.pp-fill{height:4px;border-radius:2px;transition:width 1.1s ease;}
+.pp-fill.p{background:linear-gradient(90deg,var(--purple-d),var(--blue));}
+.pp-fill.g{background:linear-gradient(90deg,var(--green-d),var(--blue));}
+
+.ptabs{display:flex;padding:0 28px;border-bottom:1px solid var(--glass-border);flex-shrink:0;}
+.ptab{
+  padding:13px 0;margin-right:22px;font-size:13px;font-weight:500;color:var(--t3);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;
+  display:flex;align-items:center;gap:6px;
+}
+.ptab.on{color:var(--t1);border-bottom-color:var(--purple);}
+.cbub{font-size:10px;background:rgba(167,139,250,.2);color:var(--purple);
+  padding:1px 6px;border-radius:8px;}
+
+.pbody{flex:1;overflow-y:auto;padding:18px 28px;}
+.pbody::-webkit-scrollbar{width:3px;}
+.pbody::-webkit-scrollbar-track{background:transparent;}
+.pbody::-webkit-scrollbar-thumb{background:rgba(109,40,217,.2);border-radius:2px;}
+.tp{display:none;} .tp.on{display:block;}
+
+/* doc items */
+.di{
+  display:flex;align-items:center;gap:12px;padding:13px 14px;
+  border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;
+}
+.di:hover{background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.3)!important;}
+.di-ico{width:40px;height:46px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.di-ico.pdf {background:rgba(239,68,68,.15);}
+.di-ico.ppt {background:rgba(245,158,11,.15);}
+.di-ico.word{background:rgba(59,130,246,.15);}
+.di-ico.other{background:rgba(139,92,246,.15);}
+.di-info{flex:1;min-width:0;}
+.di-name{font-size:13px;font-weight:600;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.di-meta{font-size:11px;color:var(--t3);}
+.di-btn{
+  flex-shrink:0;font-size:11px;font-weight:600;
+  color:var(--purple);background:rgba(167,139,250,.1);
+  border:1px solid rgba(167,139,250,.25);padding:5px 11px;border-radius:7px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.di-btn:hover{background:rgba(167,139,250,.22);}
+
+/* video items */
+.vi{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-radius:12px;margin-bottom:8px;cursor:pointer;transition:all .2s;
+}
+.vi:hover{background:rgba(52,211,153,.07);border-color:rgba(52,211,153,.3)!important;}
+.vi-thumb{width:88px;height:52px;border-radius:8px;background:rgba(0,0,0,.06);
+  flex-shrink:0;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;}
+.vi-thumb img{width:100%;height:100%;object-fit:cover;}
+.play{position:absolute;width:28px;height:28px;background:rgba(0,0,0,.65);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:#fff;transition:transform .2s;}
+.vi:hover .play{transform:scale(1.15);}
+.vi-info{flex:1;min-width:0;}
+.vi-name{font-size:13px;font-weight:600;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;}
+.vi-meta{font-size:11px;color:var(--t3);}
+
+/* empty */
+.empty{display:flex;flex-direction:column;align-items:center;padding:46px 20px;color:var(--t3);}
+.empty-ico{width:58px;height:58px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;margin-bottom:14px;}
+.empty h4{font-size:14px;font-weight:700;color:var(--t2);margin-bottom:6px;}
+.empty p{font-size:12px;text-align:center;line-height:1.7;}
+.empty-btn{
+  margin-top:16px;padding:8px 20px;
+  background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.28);
+  color:var(--purple);border-radius:8px;font-size:12px;font-weight:700;
+  cursor:pointer;transition:all .2s;backdrop-filter:blur(6px);
+}
+.empty-btn:hover{background:rgba(167,139,250,.22);}
+</style>
+</head>
+<body>
+
+<!-- SVG gradients for ring strokes -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="gp" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="bg">
+  <div class="bg-grad"></div>
+  <div class="bg-blob bl1"></div>
+  <div class="bg-blob bl2"></div>
+  <div class="bg-blob bl3"></div>
+  <div class="bg-blob bl4"></div>
+</div>
+
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between">
+    <div>
+      <div class="dept-name">仓储管理部<span class="fy-tag" id="fy-tag-hero">FY26</span></div>
+      <h1>学习计划全景</h1>
+      <div class="yr-switch">
+        <div class="yr-btn on" data-yr="FY26" onclick="switchYear('FY26')">FY26</div>
+        <div class="yr-btn" data-yr="FY27" onclick="switchYear('FY27')">FY27</div>
+      </div>
+      <div class="hero-meta">
+        <span id="hm-range">📅 2025年3月 – 2026年2月</span>
+        <span>👥 仓储管理部全员</span>
+        <span id="hm-total">🎯 9 项学习活动</span>
+      </div>
+    </div>
+    <div class="hero-date">最近更新<br><b>2026-04-09</b></div>
+  </div>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="sc glass p">
+    <div class="sc-top">
+      <div class="sc-ico">📋</div>
+      <div class="sc-tag">覆盖全年</div>
+    </div>
+    <div class="sc-num"><span class="cnum" id="st-total" data-t="9">0</span><span class="u">项</span></div>
+    <div class="sc-lbl">全年学习活动总计</div>
+  </div>
+  <div class="sc glass g">
+    <div class="sc-top">
+      <div class="sc-ico">✅</div>
+      <div class="sc-tag">超预期 ↑</div>
+    </div>
+    <div class="sc-num"><span class="cnum" id="st-done" data-t="7">0</span><span class="u">项</span></div>
+    <div class="sc-lbl" id="lbl-done">已顺利完成</div>
+  </div>
+  <div class="sc glass o">
+    <div class="sc-top">
+      <div class="sc-ico">⚡</div>
+      <div class="sc-tag">积极推进</div>
+    </div>
+    <div class="sc-num"><span class="cnum" id="st-ongoing" data-t="2">0</span><span class="u">项</span></div>
+    <div class="sc-lbl" id="lbl-ongoing">当前持续推进中</div>
+  </div>
+  <div class="sc glass b">
+    <div class="sc-top">
+      <div class="sc-ico">📈</div>
+      <div class="sc-tag">良好 ↑</div>
+    </div>
+    <div class="sc-num"><span class="cnum" id="st-rate" data-t="88">0</span><span class="u">%</span></div>
+    <div class="sc-lbl">整体目标完成率</div>
+  </div>
+</div>
+
+<!-- GANTT -->
+<div class="sec"><div class="sec-line"></div><h3>全年时间轴</h3><div class="sec-line"></div></div>
+<div class="gantt-wrap">
+  <div class="gantt glass">
+    <div class="g-head">
+      <div class="g-head-lbl">学习活动</div>
+      <div class="g-head-m">3月</div><div class="g-head-m">4月</div>
+      <div class="g-head-m">5月</div><div class="g-head-m">6月</div>
+      <div class="g-head-m">7月</div><div class="g-head-m">8月</div>
+      <div class="g-head-m">9月</div><div class="g-head-m">10月</div>
+      <div class="g-head-m">11月</div><div class="g-head-m">12月</div>
+      <div class="g-head-m">1月</div><div class="g-head-m">2月</div>
+    </div>
+    <div class="g-ms-row" id="ms-row">
+      <div class="g-ms-lbl">🏆 里程碑</div>
+    </div>
+    <div id="gbody"></div>
+  </div>
+</div>
+
+<!-- CARDS -->
+<div class="sec"><div class="sec-line"></div><h3>学习活动详情</h3><div class="sec-line"></div></div>
+<div class="cards-wrap">
+  <div>
+    <div class="cat-head">
+      <div class="cat-stripe p"></div>
+      <div class="cat-name">📚 学习计划</div>
+      <div class="cat-cnt" id="cnt-study">4 项</div>
+    </div>
+    <div class="cards-grid" id="g-study"></div>
+  </div>
+  <div>
+    <div class="cat-head">
+      <div class="cat-stripe g"></div>
+      <div class="cat-name">🔧 实践及方法论</div>
+      <div class="cat-cnt" id="cnt-prac">5 项</div>
+    </div>
+    <div class="cards-grid" id="g-prac"></div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<!-- PANEL -->
+<div class="overlay" id="ov" onclick="closeOuter(event)">
+  <div class="panel">
+    <div class="ph">
+      <button class="ph-close" onclick="closePanel()">✕</button>
+      <div class="ph-cat" id="p-cat"></div>
+      <h2 id="p-title"></h2>
+      <div class="ph-desc" id="p-desc"></div>
+    </div>
+    <div class="pp">
+      <div class="pp-top"><span>完成进度</span><span style="font-weight:700;color:var(--t2)" id="p-pct">—</span></div>
+      <div class="pp-bar"><div class="pp-fill" id="p-fill" style="width:0"></div></div>
+    </div>
+    <div class="ptabs">
+      <div class="ptab on" onclick="switchTab('docs',this)">📄 文档总结<span class="cbub" id="dcnt">0</span></div>
+      <div class="ptab" onclick="switchTab('videos',this)">🎬 视频记录<span class="cbub" id="vcnt">0</span></div>
+    </div>
+    <div class="pbody">
+      <div class="tp on" id="tp-docs"><div id="dl"></div></div>
+      <div class="tp" id="tp-videos"><div id="vl"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var D_FY26=[
+  {id:'s1',cat:'学习计划',cc:'p',icon:'🗣️',
+   title:'部门周度例会分享',
+   desc:'每周一下午 15:00–17:00，每次15分钟组内知识分享，覆盖全年，持续滚动进行。',
+   status:'ongoing',pct:80,tags:['每周一','滚动全年'],
+   bars:[{c:'p',s:0,e:11,dash:false}],
+   docs:[
+     /* {name:'2025-Q1 例会分享汇总', type:'ppt', date:'2025-04-01', url:'#'}, */
+   ],
+   videos:[
+     /* {name:'第1期知识分享录像', duration:'15分钟', date:'2025-03-03', url:'#', thumb:''}, */
+   ]
+  },
+  {id:'s2',cat:'学习计划',cc:'p',icon:'🎓',
+   title:'刘宝红课程学习',
+   desc:'2025.2.10–8.10，每周二和周四听课，1小时/次，全程约52小时系统学习。',
+   status:'done',pct:100,tags:['2025.2–8','每周2次'],
+   bars:[{c:'b',s:0,e:5}],docs:[],videos:[]},
+  {id:'s3',cat:'学习计划',cc:'p',icon:'📖',
+   title:'阅读《实战供应链》',
+   desc:'系统阅读《实战供应链》，通过云台相机记录读书心得，配合4月书籍交流会汇报展示。',
+   status:'done',pct:100,tags:['2025.3–4','书籍交流会'],
+   bars:[{c:'p',s:0,e:1}],
+   docs:[{name:'解码实战供应链：书本经验×实战碰撞的思想盛宴',type:'word',date:'2025-04',url:'learning-plan/docs/实战供应链读书大会/《解码实战供应链：书本经验 × 实战碰撞的思想盛宴》.docx'}],
+   videos:[{name:'读书分享会视频',duration:'',date:'2025-04',url:'learning-plan/docs/实战供应链读书大会/读书分享会视频.mp4',thumb:''}]},
+  {id:'s4',cat:'学习计划',cc:'p',icon:'🏭',
+   title:'同行业仓库 / 供应商参观',
+   desc:'得物、菜鸟合作用户作业参观及学习，项目全年滚动进行，配合6月参观宣传节点。',
+   status:'done',pct:100,tags:['滚动进行','参观宣传节点'],
+   bars:[{c:'p',s:0,e:11}],docs:[],videos:[]},
+  {id:'p1',cat:'实践及方法论',cc:'g',icon:'🤖',
+   title:'AI主题比赛',
+   desc:'「AI大赛开挂指南，用对工具直接起飞」，AI工具在仓储场景的实战应用与竞赛。',
+   status:'done',pct:100,tags:['2025.8'],
+   bars:[{c:'g',s:4,e:5}],
+   docs:[{name:'仓储部AI大赛总结',type:'word',date:'2025-08',url:'learning-plan/docs/AI比赛/仓储部AI大赛总结.docx'}],
+   videos:[{name:'仓储管理部AI视频',duration:'',date:'2025-08',url:'learning-plan/docs/AI比赛/仓储管理部AI视频.mp4',thumb:''}]},
+  {id:'p2',cat:'实践及方法论',cc:'g',icon:'📊',
+   title:'商业分析模型交流',
+   desc:'KISS模型、SWOT分析模型、生命周期模型等方法论的组内交流与共建实践。',
+   status:'done',pct:100,tags:['2025.11–12'],
+   bars:[{c:'g',s:7,e:9}],
+   docs:[{name:'仓储管理部头脑风暴总结',type:'word',date:'2025-11',url:'learning-plan/docs/商业分析模型交流/仓储管理部头脑风暴总结.docx'}],
+   videos:[]},
+  {id:'p3',cat:'实践及方法论',cc:'g',icon:'🔍',
+   title:'仓库作业大揭秘',
+   desc:'联动日常作业老师，进行实地参观+深度沟通，配合6月仓库作业参观宣传里程碑节点。',
+   status:'done',pct:100,tags:['2025.6','仓库参观节点'],
+   bars:[{c:'g',s:2,e:3}],docs:[],videos:[]},
+  {id:'p4',cat:'实践及方法论',cc:'g',icon:'🎬',
+   title:'高效仓库从规范开始',
+   desc:'超全仓库作业流程图解和视频制作，实时持续更新，打造组内知识沉淀库。',
+   status:'done',pct:100,tags:['实时持续更新'],
+   bars:[{c:'g',s:1,e:11}],docs:[],videos:[]},
+  {id:'p5',cat:'实践及方法论',cc:'g',icon:'📈',
+   title:'关键业务指标 & 数据看板',
+   desc:'设计核心业务指标体系，搭建数据可视化看板，实时监控与追踪，配合9月数据指标回顾。',
+   status:'ongoing',pct:75,tags:['持续进行','9月指标回顾'],
+   bars:[{c:'b',s:0,e:11}],docs:[],videos:[]}
+];
+var D_FY27=[
+  {id:'f1',cat:'学习计划',cc:'p',icon:'🗣️',
+   title:'部门周度例会分享',
+   desc:'延续FY26机制，每周一下午15分钟组内知识分享，持续滚动全年进行。',
+   status:'ongoing',pct:10,tags:['每周一','延续FY26','滚动全年'],
+   bars:[{c:'p',s:0,e:11}],docs:[],videos:[]},
+  {id:'f2',cat:'学习计划',cc:'p',icon:'🏆',
+   title:'领导力梯队成长论坛',
+   desc:'4.8–4.22 参加领导力梯队成长论坛，聚焦管理能力提升与团队梯队建设。',
+   status:'ongoing',pct:50,tags:['2026.4.8–4.22','领导力梯队'],
+   bars:[{c:'p',s:1,e:1}],docs:[],videos:[]},
+  {id:'f3',cat:'学习计划',cc:'p',icon:'👥',
+   title:'组内领导力梯队学习讨论会',
+   desc:'5月–6月组织组内专题学习讨论，结合论坛内容进行深度研讨与实践转化。',
+   status:'pending',pct:0,tags:['2026.5–6月','专题研讨'],
+   bars:[{c:'g',s:2,e:3}],docs:[],videos:[]},
+  {id:'f4',cat:'实践及方法论',cc:'g',icon:'📈',
+   title:'关键业务指标 & 数据看板',
+   desc:'延续FY26年看板建设，持续迭代核心业务指标体系与可视化看板。',
+   status:'ongoing',pct:10,tags:['延续FY26','持续进行'],
+   bars:[{c:'b',s:0,e:11}],docs:[],videos:[]}
+];
+var D=D_FY26;
+var MS_FY26=[{m:1,label:'📚 书籍交流会'},{m:3,label:'🏭 仓库参观宣传'},{m:6,label:'📊 数据指标回顾'}];
+var MS_FY27=[{m:1,label:'🏆 领导力论坛'},{m:2,label:'👥 梯队讨论会'}];
+var MS=MS_FY26;
+var CUR_YR='FY26';
+var YR_META={
+  FY26:{range:'2025年3月 – 2026年2月',total:9,done:7,ongoing:2,rate:88},
+  FY27:{range:'2026年3月 – 2027年2月',total:4,done:0,ongoing:3,rate:15}
+};
+var DICO={pdf:'📕',ppt:'📙',word:'📘',other:'📄'};
+var SLB={done:'已完成',ongoing:'进行中',pending:'待开始'};
+
+function switchYear(yr){
+  if(CUR_YR===yr)return;
+  CUR_YR=yr;
+  D=yr==='FY26'?D_FY26:D_FY27;
+  MS=yr==='FY26'?MS_FY26:MS_FY27;
+  document.querySelectorAll('.yr-btn').forEach(function(b){
+    b.classList.toggle('on',b.dataset.yr===yr);
+  });
+  document.getElementById('fy-tag-hero').textContent=yr;
+  var m=YR_META[yr];
+  document.getElementById('hm-range').textContent='📅 '+m.range;
+  document.getElementById('hm-total').textContent='🎯 '+m.total+' 项学习活动';
+  var ids=['st-total','st-done','st-ongoing','st-rate'];
+  var vals=[m.total,m.done,m.ongoing,m.rate];
+  ids.forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el){el.dataset.t=vals[i];el.textContent='0';}
+  });
+  countUp();
+  document.getElementById('gbody').innerHTML='';
+  document.getElementById('ms-row').innerHTML='<div class="g-ms-lbl">🏆 里程碑</div>';
+  buildGantt();
+  document.getElementById('g-study').innerHTML='';
+  document.getElementById('g-prac').innerHTML='';
+  buildCards();
+  var sc=D.filter(function(x){return x.cat==='学习计划';}).length;
+  var pc=D.filter(function(x){return x.cat==='实践及方法论';}).length;
+  document.getElementById('cnt-study').textContent=sc+' 项';
+  document.getElementById('cnt-prac').textContent=pc+' 项';
+}
+
+function buildGantt(){
+  var mr=document.getElementById('ms-row');
+  for(var i=0;i<12;i++){
+    var mc=document.createElement('div'); mc.className='g-ms-cell';
+    var f=MS.find(function(x){return x.m===i;});
+    if(f){var p=document.createElement('div');p.className='ms-pin';p.textContent=f.label;mc.appendChild(p);}
+    mr.appendChild(mc);
+  }
+  var gb=document.getElementById('gbody');
+  D.forEach(function(item){
+    var row=document.createElement('div'); row.className='g-row';
+    row.onclick=function(){openPanel(item.id);};
+    var lbl=document.createElement('div'); lbl.className='g-lbl';
+    var dot=document.createElement('span'); dot.className='g-dot';
+    dot.style.background=item.cc==='p'?'#a78bfa':'#34d399';
+    lbl.appendChild(dot);
+    var t=document.createElement('span'); t.className='g-txt'; t.textContent=item.title;
+    lbl.appendChild(t); row.appendChild(lbl);
+    for(var ci=0;ci<12;ci++){
+      var cell=document.createElement('div'); cell.className='g-cell';
+      item.bars.forEach(function(b){
+        if(ci>=b.s&&ci<=b.e){
+          var bar=document.createElement('div');
+          var rs=ci===b.s,re=ci===b.e;
+          bar.className='g-bar '+b.c+(b.dash?' dash':'')+(rs&&re?'':rs?' rs':re?' re':' rm');
+          cell.appendChild(bar);
+        }
+      });
+      row.appendChild(cell);
+    }
+    gb.appendChild(row);
+  });
+}
+
+function ring(pct,cc){
+  var r=16,circ=2*Math.PI*r,off=circ-(pct/100)*circ;
+  return '<svg class="ring" width="40" height="40">'
+    +'<circle class="rb" cx="20" cy="20" r="'+r+'"/>'
+    +'<circle class="rf '+cc+'" cx="20" cy="20" r="'+r+'"'
+    +' stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/>'
+    +'<text class="rt" x="20" y="20">'+pct+'%</text>'
+    +'</svg>';
+}
+function buildCards(){
+  var gs=document.getElementById('g-study'),gp=document.getElementById('g-prac');
+  D.forEach(function(item){
+    var th=item.tags.map(function(t){
+      var c=t.match(/进行|实时|持续|滚动/)?'to':t.match(/节点|里程|交流会/)?'tm':t.match(/\d{4}/)?'tp':'tf';
+      return '<span class="tag '+c+'">'+t+'</span>';
+    }).join('');
+    var d=document.createElement('div');
+    d.className='card glass card-'+item.cc;
+    d.innerHTML=
+      '<div class="card-head">'
+      +'<div class="card-ico">'+item.icon+'</div>'
+      +'<div class="sbadge '+item.status+'">'+SLB[item.status]+'</div>'
+      +'</div>'
+      +'<div class="card-title">'+item.title+'</div>'
+      +'<div class="card-desc">'+item.desc+'</div>'
+      +'<div class="card-foot">'
+      +'<div class="tags">'+th+'</div>'
+      +'<div>'+ring(item.pct,item.cc)+'</div>'
+      +'</div>';
+    d.onclick=function(){openPanel(item.id);};
+    (item.cat==='学习计划'?gs:gp).appendChild(d);
+  });
+}
+
+function openPanel(id){
+  var item=D.find(function(x){return x.id===id;});
+  if(!item)return;
+  document.getElementById('p-cat').textContent=item.cat;
+  document.getElementById('p-cat').className='ph-cat '+item.cc;
+  document.getElementById('p-title').textContent=item.title;
+  document.getElementById('p-desc').textContent=item.desc;
+  document.getElementById('p-pct').textContent=item.pct+'%';
+  var f=document.getElementById('p-fill');
+  f.className='pp-fill '+item.cc; f.style.width='0';
+  setTimeout(function(){f.style.width=item.pct+'%';},60);
+  document.getElementById('dcnt').textContent=item.docs.length;
+  document.getElementById('vcnt').textContent=item.videos.length;
+  var dl=document.getElementById('dl'); dl.innerHTML='';
+  if(item.docs.length){
+    item.docs.forEach(function(doc){
+      var tp=doc.type||'other';
+      var el=document.createElement('div');
+      el.className='di glass';
+      el.innerHTML='<div class="di-ico '+tp+'">'+(DICO[tp]||'📄')+'</div>'
+        +'<div class="di-info"><div class="di-name">'+doc.name+'</div>'
+        +'<div class="di-meta">'+(doc.date||'')+'</div></div>'
+        +'<button class="di-btn" onclick="window.open(\''+doc.url+'\',\'_blank\')">查看 →</button>';
+      dl.appendChild(el);
+    });
+  }else{
+    dl.innerHTML=mkEmpty('📂','暂无文档总结','将该活动的总结、PPT 或报告上传后即可在此查阅');
+  }
+  var vl=document.getElementById('vl'); vl.innerHTML='';
+  if(item.videos.length){
+    item.videos.forEach(function(v){
+      var el=document.createElement('div');
+      el.className='vi glass';
+      el.innerHTML='<div class="vi-thumb">'+(v.thumb?'<img src="'+v.thumb+'">':'')
+        +'<div class="play">▶</div></div>'
+        +'<div class="vi-info"><div class="vi-name">'+v.name+'</div>'
+        +'<div class="vi-meta">'+(v.duration||'')+(v.date?' · '+v.date:'')+'</div></div>';
+      el.onclick=function(){if(v.url)window.open(v.url,'_blank');};
+      vl.appendChild(el);
+    });
+  }else{
+    vl.innerHTML=mkEmpty('🎬','暂无视频记录','将课程录像或参观视频链接添加到此处');
+  }
+  switchTab('docs',document.querySelector('.ptab'));
+  document.getElementById('ov').classList.add('on');
+}
+function mkEmpty(ico,title,hint){
+  return '<div class="empty"><div class="empty-ico glass">'+ico+'</div>'
+    +'<h4>'+title+'</h4><p>'+hint+'</p></div>';
+}
+function closePanel(){
+  document.getElementById('ov').classList.remove('on');
+  setTimeout(function(){document.getElementById('p-fill').style.width='0';},400);
+}
+function closeOuter(e){if(e.target===document.getElementById('ov'))closePanel();}
+function switchTab(n,el){
+  document.querySelectorAll('.ptab').forEach(function(t){t.classList.remove('on');});
+  document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('on');});
+  if(el)el.classList.add('on');
+  var tp=document.getElementById('tp-'+n); if(tp)tp.classList.add('on');
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();});
+function countUp(){
+  document.querySelectorAll('.cnum').forEach(function(el){
+    var tgt=+el.dataset.t,t0=performance.now();
+    (function tick(now){
+      var p=Math.min((now-t0)/1100,1);
+      el.textContent=Math.round((1-Math.pow(1-p,3))*tgt);
+      if(p<1)requestAnimationFrame(tick);
+    })(t0);
+  });
+}
+buildGantt(); buildCards(); setTimeout(countUp,400);
+</script>
+</body>
+</html>
