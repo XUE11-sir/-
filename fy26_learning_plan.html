@@ -255,7 +255,43 @@ body{
   display:flex;flex-direction:column;
   transform:translateX(100%);
   transition:transform .38s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
 }
+
+/* ── Preview pane (doc/video inline viewer) ── */
+.preview-pane{
+  position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(237,233,254,.92) 0%,rgba(255,255,255,.97) 100%);
+  backdrop-filter:blur(20px);
+  display:flex;flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  z-index:20;
+}
+.preview-pane.on{transform:translateX(0);}
+.preview-head{
+  padding:13px 18px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--glass-border);flex-shrink:0;
+  background:rgba(255,255,255,.6);
+}
+.preview-back{
+  background:rgba(255,255,255,.7);border:1px solid var(--glass-border);
+  color:var(--t2);font-size:12px;padding:5px 12px;border-radius:8px;
+  cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.preview-back:hover{background:rgba(255,255,255,.95);color:var(--t1);}
+.preview-name{flex:1;font-size:13px;font-weight:600;color:var(--t1);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.preview-dl{
+  background:rgba(109,40,217,.1);border:1px solid rgba(109,40,217,.28);
+  color:var(--purple);font-size:11px;font-weight:700;
+  padding:5px 13px;border-radius:8px;text-decoration:none;
+  transition:all .2s;flex-shrink:0;white-space:nowrap;
+}
+.preview-dl:hover{background:rgba(109,40,217,.2);}
+.preview-body{flex:1;overflow:hidden;background:#f5f3ff;}
+.preview-body iframe{width:100%;height:100%;border:none;display:block;}
+.preview-body video{width:100%;height:100%;background:#1a1245;display:block;object-fit:contain;}
 .overlay.on .panel{transform:translateX(0);}
 
 /* panel header glass strip */
@@ -488,6 +524,15 @@ body{
 <!-- PANEL -->
 <div class="overlay" id="ov" onclick="closeOuter(event)">
   <div class="panel">
+    <!-- inline preview layer -->
+    <div class="preview-pane" id="preview-pane">
+      <div class="preview-head">
+        <button class="preview-back" onclick="closePreview()">← 返回</button>
+        <span class="preview-name" id="preview-name"></span>
+        <a class="preview-dl" id="preview-dl" href="#" download>⬇ 下载</a>
+      </div>
+      <div class="preview-body" id="preview-body"></div>
+    </div>
     <div class="ph">
       <button class="ph-close" onclick="closePanel()">✕</button>
       <div class="ph-cat" id="p-cat"></div>
@@ -720,7 +765,8 @@ function openPanel(id){
       el.innerHTML='<div class="di-ico '+tp+'">'+(DICO[tp]||'📄')+'</div>'
         +'<div class="di-info"><div class="di-name">'+doc.name+'</div>'
         +'<div class="di-meta">'+(doc.date||'')+'</div></div>'
-        +'<button class="di-btn" onclick="window.open(\''+doc.url+'\',\'_blank\')">查看 →</button>';
+        +'<span style="font-size:11px;color:var(--purple);font-weight:600;">预览 →</span>';
+      el.onclick=function(){openDoc(doc);};
       dl.appendChild(el);
     });
   }else{
@@ -735,7 +781,7 @@ function openPanel(id){
         +'<div class="play">▶</div></div>'
         +'<div class="vi-info"><div class="vi-name">'+v.name+'</div>'
         +'<div class="vi-meta">'+(v.duration||'')+(v.date?' · '+v.date:'')+'</div></div>';
-      el.onclick=function(){if(v.url)window.open(v.url,'_blank');};
+      el.onclick=function(){if(v.url)openVideo(v);};
       vl.appendChild(el);
     });
   }else{
@@ -748,7 +794,31 @@ function mkEmpty(ico,title,hint){
   return '<div class="empty"><div class="empty-ico glass">'+ico+'</div>'
     +'<h4>'+title+'</h4><p>'+hint+'</p></div>';
 }
+var BASE_URL='https://xue11-sir.github.io/-/';
+function openDoc(doc){
+  var full=BASE_URL+doc.url;
+  var ext=doc.url.split('.').pop().toLowerCase();
+  var src=ext==='pdf'?full:'https://view.officeapps.live.com/op/view.aspx?src='+encodeURIComponent(full);
+  document.getElementById('preview-name').textContent=doc.name;
+  document.getElementById('preview-dl').href=doc.url;
+  document.getElementById('preview-dl').setAttribute('download',doc.name);
+  document.getElementById('preview-body').innerHTML='<iframe src="'+src+'"></iframe>';
+  document.getElementById('preview-pane').classList.add('on');
+}
+function openVideo(v){
+  document.getElementById('preview-name').textContent=v.name;
+  document.getElementById('preview-dl').href=v.url;
+  document.getElementById('preview-dl').setAttribute('download',v.name);
+  document.getElementById('preview-body').innerHTML='<video src="'+v.url+'" controls autoplay></video>';
+  document.getElementById('preview-pane').classList.add('on');
+}
+function closePreview(){
+  document.getElementById('preview-pane').classList.remove('on');
+  setTimeout(function(){document.getElementById('preview-body').innerHTML='';},320);
+}
 function closePanel(){
+  document.getElementById('preview-pane').classList.remove('on');
+  document.getElementById('preview-body').innerHTML='';
   document.getElementById('ov').classList.remove('on');
   setTimeout(function(){document.getElementById('p-fill').style.width='0';},400);
 }
