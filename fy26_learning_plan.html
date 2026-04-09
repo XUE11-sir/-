@@ -390,7 +390,7 @@ body{
 <div class="hero">
   <div style="display:flex;align-items:flex-start;justify-content:space-between">
     <div>
-      <div class="dept-name">仓储管理部<span class="fy-tag" id="fy-tag-hero">FY26</span></div>
+      <div class="dept-name">仓储管理部</div>
       <h1>学习计划全景</h1>
       <div class="yr-switch">
         <div class="yr-btn on" data-yr="FY26" onclick="switchYear('FY26')">FY26</div>
@@ -608,7 +608,6 @@ function switchYear(yr){
   document.querySelectorAll('.yr-btn').forEach(function(b){
     b.classList.toggle('on',b.dataset.yr===yr);
   });
-  document.getElementById('fy-tag-hero').textContent=yr;
   var m=YR_META[yr];
   document.getElementById('hm-range').textContent='📅 '+m.range;
   document.getElementById('hm-total').textContent='🎯 '+m.total+' 项学习活动';
