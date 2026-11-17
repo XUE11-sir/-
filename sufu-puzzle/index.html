@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>酥芙甜铺 · 拼图暖场</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --paper: #f3ead8;
+      --cream: #fff8ee;
+      --ink: #2c3a42;
+      --muted: #6d7a80;
+      --teal: #2f6f7c;
+      --teal-d: #1e4d58;
+      --banner: #2a6280;
+      --berry: #c45b4a;
+      --butter: #e2b65a;
+      --line: #e0d2b8;
+      --shadow: 0 10px 28px rgba(44, 58, 66, 0.16);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Noto Serif SC", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #fffdf7 0%, transparent 50%),
+        radial-gradient(900px 500px at 110% 0%, #d7ebe8 0%, transparent 46%),
+        repeating-linear-gradient(90deg, rgba(47,111,124,.04) 0 1px, transparent 1px 28px),
+        var(--paper);
+    }
+    .wrap {
+      min-height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      padding: 16px 18px 18px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .kicker {
+      font-family: "ZCOOL XiaoWei", serif;
+      letter-spacing: .28em;
+      font-size: 12px;
+      color: var(--teal);
+    }
+    h1 {
+      margin: 0;
+      font-family: "Ma Shan Zheng", cursive;
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 400;
+      color: var(--teal-d);
+      line-height: 1;
+    }
+    .hint { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      font-family: "ZCOOL XiaoWei", serif;
+      border: 1.5px solid var(--teal);
+      background: var(--cream);
+      color: var(--teal-d);
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 0 var(--teal);
+    }
+    button:hover { transform: translateY(-1px); }
+    button.primary { background: var(--teal); color: #fff; }
+    button.ghost { border-color: var(--line); box-shadow: none; color: var(--muted); }
+    .stage {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) 1fr;
+      gap: 16px;
+      min-height: 0;
+    }
+    .tray {
+      background: rgba(255,248,238,.82);
+      border: 1.5px dashed #c9b48d;
+      border-radius: 22px;
+      padding: 14px 12px 16px;
+      overflow: auto;
+      min-height: 180px;
+    }
+    .tray h2 {
+      margin: 0 8px 10px;
+      font-family: "ZCOOL XiaoWei", serif;
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--teal);
+    }
+    .tray-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-content: flex-start;
+    }
+    .board-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      min-height: 0;
+    }
+    .board {
+      position: relative;
+      width: min(100%, calc((100vh - 140px) * 0.933));
+      aspect-ratio: 2016 / 2160;
+      background: #cfe4ee url("pieces/01-bg.jpg") center / cover no-repeat;
+      border-radius: 8px;
+      box-shadow: var(--shadow), 0 0 0 10px #fff8ee, 0 0 0 11px #d8c7a6;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .board.over { outline: 3px dashed var(--berry); }
+    .piece {
+      position: relative;
+      display: block;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-drag: none;
+      touch-action: none;
+      filter: drop-shadow(0 6px 8px rgba(44,58,66,.22));
+      transform: rotate(var(--tilt, 0deg));
+      transition: filter .15s ease;
+    }
+    .piece img { display: block; width: 100%; height: auto; pointer-events: none; }
+    .tray .piece { width: min(42%, 118px); }
+    .tray .piece.wide { width: 92%; }
+    .tray .piece.tall { width: 34%; }
+    .board .piece {
+      position: absolute;
+      margin: 0;
+      width: var(--bw);
+    }
+    .piece.dragging {
+      cursor: grabbing;
+      z-index: 80;
+      filter: drop-shadow(0 18px 18px rgba(44,58,66,.28));
+      transform: rotate(0deg) scale(1.04);
+    }
+    .ghost {
+      position: fixed;
+      pointer-events: none;
+      z-index: 90;
+      margin: 0;
+    }
+    .answer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .25s ease;
+    }
+    .board.show-answer .answer { opacity: 1; }
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      background: rgba(255,248,238,.92);
+      border: 1px solid var(--line);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    @media (max-width: 860px) {
+      .stage { grid-template-columns: 1fr; grid-template-rows: 1fr 210px; }
+      .tray { order: 2; }
+      .board { width: min(100%, 92vw); }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="kicker">读书分享会 · 暖场</div>
+        <h1>把甜铺拼回来</h1>
+        <p class="hint">从左侧托盘拖贴纸到蓝色底图上，大家一起拼成海报。</p>
+      </div>
+      <div class="actions">
+        <button type="button" id="btn-shuffle">打乱托盘</button>
+        <button type="button" id="btn-reset" class="ghost">全部收回</button>
+        <button type="button" id="btn-answer" class="primary">看一眼答案</button>
+      </div>
+    </header>
+    <div class="stage">
+      <aside class="tray">
+        <h2>贴纸托盘</h2>
+        <div class="tray-list" id="tray"></div>
+      </aside>
+      <div class="board-wrap">
+        <div class="board" id="board">
+          <img class="answer" id="answer" src="pieces/00-answer.jpg" alt="答案原图" />
+          <div class="toast">拖到这张底图上 · 可叠放、可挪动</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const POSTER = { w: 2016, h: 2160 };
+    const PIECES = [
+      { id: "title", src: "pieces/02-title.png", label: "标题", w: 1860, h: 350, wide: true },
+      { id: "intro", src: "pieces/07-intro.png", label: "巷口宝藏", w: 400, h: 175 },
+      { id: "menu", src: "pieces/08-menu.png", label: "菜单", w: 290, h: 780, tall: true },
+      { id: "slogan", src: "pieces/09-slogan.png", label: "口号", w: 1000, h: 270, wide: true },
+      { id: "addr", src: "pieces/10-addr.png", label: "地址", w: 520, h: 145, wide: true },
+      { id: "quote", src: "pieces/11-quote.png", label: "心意", w: 330, h: 145 },
+      { id: "cake", src: "pieces/12-cake.png", label: "巴斯克", w: 720, h: 470 },
+      { id: "mochi", src: "pieces/13-mochi.png", label: "雪媚娘", w: 530, h: 560 },
+      { id: "cookie", src: "pieces/14-cookie.png", label: "曲奇", w: 450, h: 410 },
+      { id: "star", src: "pieces/15-star.png", label: "星星", w: 72, h: 72 },
+      { id: "icon", src: "pieces/16-icon.png", label: "小蛋糕", w: 90, h: 90 },
+      { id: "vine", src: "pieces/17-vine.png", label: "花边", w: 1320, h: 90, wide: true },
+      { id: "ftl", src: "pieces/18-flower-tl.png", label: "左上花", w: 240, h: 180 },
+      { id: "ftr", src: "pieces/19-flower-tr.png", label: "雏菊", w: 260, h: 210 },
+      { id: "fbl", src: "pieces/20-flower-bl.png", label: "左下花", w: 360, h: 250 },
+      { id: "fbr", src: "pieces/21-flower-br.png", label: "右下花", w: 350, h: 270 },
+      { id: "mint", src: "pieces/22-mint.png", label: "薄荷小菊", w: 310, h: 290 }
+    ];
+
+    const tray = document.getElementById("tray");
+    const board = document.getElementById("board");
+    const answer = document.getElementById("answer");
+    let zTop = 2;
+    let showingAnswer = false;
+
+    function tilt() {
+      return ((Math.random() * 14) - 7).toFixed(1) + "deg";
+    }
+
+    function makePiece(meta) {
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "piece" + (meta.wide ? " wide" : "") + (meta.tall ? " tall" : "");
+      el.dataset.id = meta.id;
+      el.style.setProperty("--tilt", tilt());
+      el.style.setProperty("--bw", ((meta.w / POSTER.w) * 100).toFixed(2) + "%");
+      el.title = meta.label;
+      el.innerHTML = '<img alt="' + meta.label + '" src="' + meta.src + '">';
+      bindDrag(el);
+      return el;
+    }
+
+    function fillTray(shuffle) {
+      const list = PIECES.slice();
+      if (shuffle) {
+        for (let i = list.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [list[i], list[j]] = [list[j], list[i]];
+        }
+      }
+      tray.innerHTML = "";
+      board.querySelectorAll(".piece").forEach((n) => n.remove());
+      list.forEach((meta) => tray.appendChild(makePiece(meta)));
+    }
+
+    function boardRect() {
+      return board.getBoundingClientRect();
+    }
+
+    function placeOnBoard(el, clientX, clientY) {
+      const r = boardRect();
+      const pw = (parseFloat(el.style.getPropertyValue("--bw")) / 100) * r.width;
+      const ph = el.getBoundingClientRect().height || pw * 0.6;
+      let x = ((clientX - r.left - pw / 2) / r.width) * 100;
+      let y = ((clientY - r.top - ph / 2) / r.height) * 100;
+      x = Math.max(-8, Math.min(92, x));
+      y = Math.max(-6, Math.min(90, y));
+      el.style.left = x + "%";
+      el.style.top = y + "%";
+      el.style.zIndex = String(++zTop);
+      board.appendChild(el);
+    }
+
+    function bindDrag(el) {
+      let ox = 0, oy = 0, dragging = false;
+
+      el.addEventListener("pointerdown", (e) => {
+        if (e.button != null && e.button !== 0) return;
+        e.preventDefault();
+        el.setPointerCapture(e.pointerId);
+        dragging = true;
+        el.classList.add("dragging");
+        const br = el.getBoundingClientRect();
+        ox = e.clientX - br.left;
+        oy = e.clientY - br.top;
+        if (el.parentElement === tray) {
+          document.body.appendChild(el);
+          el.classList.add("ghost");
+          el.style.width = br.width + "px";
+          el.style.left = br.left + "px";
+          el.style.top = br.top + "px";
+          el.style.position = "fixed";
+        }
+      });
+
+      el.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        if (el.classList.contains("ghost") || el.parentElement === document.body) {
+          el.style.left = (e.clientX - ox) + "px";
+          el.style.top = (e.clientY - oy) + "px";
+        } else {
+          const r = boardRect();
+          const x = ((e.clientX - r.left - ox) / r.width) * 100;
+          const y = ((e.clientY - r.top - oy) / r.height) * 100;
+          el.style.left = x + "%";
+          el.style.top = y + "%";
+        }
+        const r = boardRect();
+        const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        board.classList.toggle("over", over);
+      });
+
+      function end(e) {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove("dragging");
+        board.classList.remove("over");
+        const r = boardRect();
+        const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        el.classList.remove("ghost");
+        el.style.position = "";
+        el.style.width = "";
+        if (over) {
+          placeOnBoard(el, e.clientX, e.clientY);
+        } else {
+          el.style.left = "";
+          el.style.top = "";
+          el.style.zIndex = "";
+          tray.appendChild(el);
+        }
+      }
+      el.addEventListener("pointerup", end);
+      el.addEventListener("pointercancel", end);
+    }
+
+    document.getElementById("btn-shuffle").onclick = () => fillTray(true);
+    document.getElementById("btn-reset").onclick = () => fillTray(true);
+    document.getElementById("btn-answer").onclick = () => {
+      showingAnswer = !showingAnswer;
+      board.classList.toggle("show-answer", showingAnswer);
+      document.getElementById("btn-answer").textContent = showingAnswer ? "收起答案" : "看一眼答案";
+    };
+
+    fillTray(true);
+  </script>
+</body>
+</html>
