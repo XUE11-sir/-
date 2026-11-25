@@ -132,9 +132,9 @@ body{
 .g-ms-cell{position:relative;border-right:1px solid rgba(255,255,255,0.25);
   display:flex;align-items:center;min-height:28px;padding:5px 1px;}
 .ms-pin{
-  height:20px;width:100%;
+  flex:1;height:20px;width:100%;min-width:0;
   font-size:10px;font-weight:600;color:var(--orange);
-  background:rgba(251,191,36,0.45);
+  background:rgba(251,191,36,0.55);
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;white-space:nowrap;box-sizing:border-box;
   border-radius:4px;
@@ -432,7 +432,7 @@ body{
         <span id="hm-total">🎯 7 项学习活动</span>
       </div>
     </div>
-    <div class="hero-date">最近更新<br><b>2026-11-25c</b></div>
+    <div class="hero-date">最近更新<br><b>2026-11-25d</b></div>
   </div>
 </div>
 
@@ -694,7 +694,7 @@ function buildGantt(){
         var p=document.createElement('div');
         var rs=i===s,re=i===e;
         p.className='ms-pin'+(rs&&re?'':rs?' rs':re?' re':' rm');
-        if(rs) p.textContent=x.label;
+        p.textContent=x.label;
         mc.appendChild(p);
       }
     });
