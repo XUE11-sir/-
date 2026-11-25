@@ -135,6 +135,7 @@ body{
   font-size:10px;font-weight:600;color:var(--orange);
   background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.35);
   padding:2px 7px;border-radius:6px;white-space:nowrap;
+  z-index:1;justify-self:stretch;align-self:center;text-align:center;margin:3px 2px;
 }
 .g-row{display:grid;grid-template-columns:190px repeat(12,1fr);
   border-bottom:1px solid rgba(255,255,255,0.3);
@@ -423,7 +424,7 @@ body{
       <div class="hero-meta">
         <span id="hm-range">📅 2026年3月 – 2027年2月</span>
         <span>👥 仓储管理部全员</span>
-        <span id="hm-total">🎯 8 项学习活动</span>
+        <span id="hm-total">🎯 7 项学习活动</span>
       </div>
     </div>
     <div class="hero-date">最近更新<br><b>2026-11-25</b></div>
@@ -437,7 +438,7 @@ body{
       <div class="sc-ico">📋</div>
       <div class="sc-tag">覆盖全年</div>
     </div>
-    <div class="sc-num"><span class="cnum" id="st-total" data-t="8">0</span><span class="u">项</span></div>
+    <div class="sc-num"><span class="cnum" id="st-total" data-t="7">0</span><span class="u">项</span></div>
     <div class="sc-lbl">全年学习活动总计</div>
   </div>
   <div class="sc glass g">
@@ -461,7 +462,7 @@ body{
       <div class="sc-ico">📈</div>
       <div class="sc-tag">良好 ↑</div>
     </div>
-    <div class="sc-num"><span class="cnum" id="st-rate" data-t="38">0</span><span class="u">%</span></div>
+    <div class="sc-num"><span class="cnum" id="st-rate" data-t="43">0</span><span class="u">%</span></div>
     <div class="sc-lbl">整体目标完成率</div>
   </div>
 </div>
@@ -493,7 +494,7 @@ body{
     <div class="cat-head">
       <div class="cat-stripe p"></div>
       <div class="cat-name">📚 学习计划</div>
-      <div class="cat-cnt" id="cnt-study">7 项</div>
+      <div class="cat-cnt" id="cnt-study">6 项</div>
     </div>
     <div class="cards-grid" id="g-study"></div>
   </div>
@@ -619,11 +620,6 @@ var D_FY27=[
    desc:'延续FY26年看板建设，持续迭代核心业务指标体系与可视化看板。',
    status:'ongoing',pct:10,tags:['延续FY26','持续进行'],
    bars:[{c:'b',s:0,e:11}],docs:[],videos:[]},
-  {id:'f5',cat:'学习计划',cc:'p',icon:'💡',
-   title:'新财年头脑风暴会议',
-   desc:'组内新财年规划专题研讨，通过头脑风暴共创学习目标与年度重点方向。',
-   status:'pending',pct:0,tags:['2026.5月','头脑风暴'],
-   bars:[{c:'p',s:2,e:2}],docs:[],videos:[]},
   {id:'f6',cat:'学习计划',cc:'p',icon:'🏭',
    title:'同行业仓库 / 供应商参观',
    desc:'得物、菜鸟合作用户作业参观及学习，配合7-8月参观宣传节点。',
@@ -642,12 +638,12 @@ var D_FY27=[
 ];
 var D=D_FY27;
 var MS_FY26=[{m:1,label:'📚 读书分享会'},{m:3,label:'🏭 仓库参观宣传'},{m:5,label:'🤖 AI主题比赛'},{m:6,label:'📊 数据指标回顾'}];
-var MS_FY27=[{m:1,label:'🏆 领导力论坛'},{m:2,label:'👥 梯队讨论会'},{m:8,label:'📚 读书分享会'},{m:9,label:'💻 计算机科学速成课'}];
+var MS_FY27=[{m:1,label:'🏆 领导力论坛'},{m:2,e:3,label:'👥 梯队讨论会'},{s:7,e:8,label:'📚 读书分享会'},{s:9,e:10,label:'💻 计算机科学速成课'}];
 var MS=MS_FY27;
 var CUR_YR='FY27';
 var YR_META={
   FY26:{range:'2025年3月 – 2026年2月',total:8,done:6,ongoing:2,rate:75},
-  FY27:{range:'2026年3月 – 2027年2月',total:8,done:3,ongoing:2,rate:38}
+  FY27:{range:'2026年3月 – 2027年2月',total:7,done:3,ongoing:2,rate:43}
 };
 var DICO={pdf:'📕',ppt:'📙',word:'📘',excel:'📗',html:'🌐',other:'📄'};
 var SLB={done:'已完成',ongoing:'进行中',pending:'待开始'};
@@ -686,10 +682,18 @@ function buildGantt(){
   var mr=document.getElementById('ms-row');
   for(var i=0;i<12;i++){
     var mc=document.createElement('div'); mc.className='g-ms-cell';
-    var f=MS.find(function(x){return x.m===i;});
-    if(f){var p=document.createElement('div');p.className='ms-pin';p.textContent=f.label;mc.appendChild(p);}
     mr.appendChild(mc);
   }
+  MS.forEach(function(x){
+    var s=x.s!=null?x.s:x.m;
+    var e=x.e!=null?x.e:s;
+    var p=document.createElement('div');
+    p.className='ms-pin';
+    p.textContent=x.label;
+    p.style.gridColumn=(s+2)+' / '+(e+3);
+    p.style.gridRow='1';
+    mr.appendChild(p);
+  });
   var gb=document.getElementById('gbody');
   D.forEach(function(item){
     var row=document.createElement('div'); row.className='g-row';
