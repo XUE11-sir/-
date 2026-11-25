@@ -125,23 +125,20 @@ body{
   letter-spacing:.8px;text-transform:uppercase;border-right:1px solid rgba(255,255,255,0.4);}
 .g-head-m{padding:10px 2px;font-size:11px;font-weight:500;color:var(--t2);
   text-align:center;border-right:1px solid rgba(255,255,255,0.3);}
-.g-ms-row{display:grid;grid-template-columns:190px repeat(12,1fr);
+.g-ms-row{display:grid;grid-template-columns:190px repeat(12,1fr);grid-template-rows:28px;
   border-bottom:1px solid rgba(255,255,255,0.4);background:rgba(251,191,36,0.06);}
 .g-ms-lbl{padding:6px 16px;font-size:10px;font-weight:700;color:var(--orange);
-  border-right:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:5px;}
+  border-right:1px solid rgba(255,255,255,0.4);display:flex;align-items:center;gap:5px;
+  grid-column:1;grid-row:1;}
 .g-ms-cell{position:relative;border-right:1px solid rgba(255,255,255,0.25);
-  display:flex;align-items:center;min-height:28px;padding:5px 1px;}
+  min-height:28px;grid-row:1;}
 .ms-pin{
-  flex:1;height:20px;width:100%;min-width:0;
+  height:20px;align-self:center;margin:0 3px;z-index:2;
   font-size:10px;font-weight:600;color:var(--orange);
   background:rgba(251,191,36,0.55);
   display:flex;align-items:center;justify-content:center;
-  overflow:hidden;white-space:nowrap;box-sizing:border-box;
-  border-radius:4px;
+  overflow:hidden;white-space:nowrap;border-radius:4px;grid-row:1;
 }
-.ms-pin.rs{border-radius:4px 0 0 4px;}
-.ms-pin.re{border-radius:0 4px 4px 0;}
-.ms-pin.rm{border-radius:0;}
 .g-row{display:grid;grid-template-columns:190px repeat(12,1fr);
   border-bottom:1px solid rgba(255,255,255,0.3);
   transition:background .15s;cursor:pointer;}
@@ -432,7 +429,7 @@ body{
         <span id="hm-total">🎯 7 项学习活动</span>
       </div>
     </div>
-    <div class="hero-date">最近更新<br><b>2026-11-25d</b></div>
+    <div class="hero-date">最近更新<br><b>2026-11-25e</b></div>
   </div>
 </div>
 
@@ -687,19 +684,20 @@ function buildGantt(){
   var mr=document.getElementById('ms-row');
   for(var i=0;i<12;i++){
     var mc=document.createElement('div'); mc.className='g-ms-cell';
-    MS.forEach(function(x){
-      var s=x.s!=null?x.s:x.m;
-      var e=x.e!=null?x.e:s;
-      if(i>=s&&i<=e){
-        var p=document.createElement('div');
-        var rs=i===s,re=i===e;
-        p.className='ms-pin'+(rs&&re?'':rs?' rs':re?' re':' rm');
-        p.textContent=x.label;
-        mc.appendChild(p);
-      }
-    });
+    mc.style.gridColumn=String(i+2);
+    mc.style.gridRow='1';
     mr.appendChild(mc);
   }
+  MS.forEach(function(x){
+    var s=x.s!=null?x.s:x.m;
+    var e=x.e!=null?x.e:s;
+    var p=document.createElement('div');
+    p.className='ms-pin';
+    p.textContent=x.label;
+    p.style.gridColumn=(s+2)+' / '+(e+3);
+    p.style.gridRow='1';
+    mr.appendChild(p);
+  });
   var gb=document.getElementById('gbody');
   D.forEach(function(item){
     var row=document.createElement('div'); row.className='g-row';
